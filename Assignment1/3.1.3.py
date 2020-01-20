@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jan 19 19:08:18 2020
-
-@author: bjeli, fernando, lucas
-"""
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from DataGeneration import linearly_separable_data
+import DataGeneration as dg
 
 CONVERGENCE = 0.001
 ITERATIONS = 50
@@ -20,11 +14,11 @@ def plot_data(X, t):
 def calculateBoundary(x, w):
     return (-w[:,0] * x - w[:,2]) / w[:,1] # Wx = 0
 
-mA = [ 1.0, 0.5]
-mB = [-1.0, 0.0] 
-sigmaA = 0.5
-sigmaB = 0.5
-x, t = linearly_separable_data(mA, sigmaA, mB, sigmaB)
+m = [1.0, 0.5]
+sigma = 0.5
+x, t = dg.non_linearly_separable_data(m, sigma)
+"""
+# -------------------- FIRST PART -> Linear Separation for non-linearly separable data -------------------- #
 
 __x = np.arange(min(x[0,:]), max(x[0,:]), (max(x[0,:]) - min(x[0,:])) / SAMPLES)
 eta = 0.001
@@ -49,3 +43,16 @@ for i in range(ITERATIONS):
     else:
         plt.show(block=False)
         plt.pause(0.05)
+
+# -------------------- SECOND PART -> Separation of non-linearly separable data -------------------- #
+"""
+m_a = [1.0, 0.3]
+m_b = [0.0, -0.1]
+sigma_a = 0.2
+sigma_b = 0.3
+x, t = dg.new_data_generation(m_a, m_b, sigma_a, sigma_b)
+
+
+
+
+
