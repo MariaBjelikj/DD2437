@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jan 19 19:08:18 2020
-
-@author: bjeli, fernando, lucas
-"""
 import numpy as np
 import matplotlib.pyplot as plt
 import time
@@ -49,11 +43,44 @@ def linearly_separable_data(mA, sigmaA, mB, sigmaB):
     
     return X, t
 
+def delta_rule_batch(x, t, w, eta):
+    w += - eta * np.dot(np.dot(w, x) - t, np.transpose(x)) # delta rule
+    return w
+
+def delta_rule_sequential(x, t, w, eta):
+    delta_w = w[:]
+    for i in range(x.shape[1]):
+        delta_w = delta_w - eta * np.dot(np.dot(w, x[:, i, None]) \
+                                         - t[:, i], np.transpose(x[:, i, None]))
+        
+    return delta_w
+    
+def perceptron_learning(x, t, w, eta):
+    # https://en.wikipedia.org/wiki/Perceptron
+    for i in range(0, x.shape[1]):
+
+        activation = w[0][len(x[:,i]) - 1]
+        for j in range(0, len(x[:,i])):
+            activation += w[0][j] * x[:,i][j] # activation is the sum of all the weights * nodes
+            
+        if activation >= 0:
+            prediction = 1.0
+        else :
+            prediction = -1.0
+
+        for k in range(0, len(x[:,i])):
+            w[0][k] = w[0][k] + (eta * (t[:,i] - prediction) / 2 * x[:,i][k]) # error calculated as (real target - prediction) / 2
+
+    return w
+
+
+
+
 
 def plot_data(X, t):
     plt.scatter(X[0,:], X[1,:], c=t[0,:])
     plt.show()
-
+    
 def calculateBoundary(x, w):
     return (-w[:,0] * x - w[:,2]) / w[:,1] # Wx = 0
 
@@ -67,15 +94,19 @@ __x = np.arange(min(x[0,:]), max(x[0,:]), (max(x[0,:]) - min(x[0,:])) / SAMPLES)
 eta = 0.001
 w = np.random.rand(t.shape[0], x.shape[0])
 
+
 for i in range(ITERATIONS):
-    delta_w = -eta * np.dot(np.dot(w, x) - t, np.transpose(x))
-    w += delta_w
+    
+    w_delta_batch = delta_rule_batch(x, t, w, eta)
+    w_delta_sequential = delta_rule_sequential(x, t, w, eta)
+    w_perceptron = perceptron_learning(x, t, w, eta)
+    
 
     plt.clf()
     axes = plt.gca()
     axes.set_xlim(min(x[0,:]) - 0.5, max(x[0,:]) + 0.5)
     axes.set_ylim(min(x[1,:]) - 0.5, max(x[1,:]) + 0.5)
-    plt.plot(__x, calculateBoundary(__x, w), label="Boundary", color='red')
+    plt.plot(__x, calculateBoundary(__x, w_perceptron), label="Boundary", color='red')
     plt.title("Simple Perceptron: Iteration %i" %(i+1))
     plt.xlabel("X-Coord")
     plt.ylabel("Y-Coord")
