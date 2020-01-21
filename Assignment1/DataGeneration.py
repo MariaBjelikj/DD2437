@@ -92,6 +92,8 @@ Data removal condition:
 def generate_training_a(x, t, percentage):
     x_training = x
     t_training = t
+    x_test = list()
+    t_test = list()
 
     # Class A
     removal_pos_a = list()
@@ -100,11 +102,13 @@ def generate_training_a(x, t, percentage):
         if (t_training[0,aux] == 1):
             if (aux not in removal_pos_a):
                 removal_pos_a.append(aux)
+                x_test.append(x_training[:,aux])
+                t_test.append(t_training[:,aux])
 
     x_training = np.delete(x_training, removal_pos_a, axis=1)
     t_training = np.delete(t_training, removal_pos_a, axis=1)
     
-    return x_training, t_training
+    return x_training, t_training, np.transpose(np.array(x_test)), np.transpose(np.array(t_test))
 
 """
 Data removal condition:
@@ -113,6 +117,8 @@ Data removal condition:
 def generate_training_b(x, t, percentage):
     x_training = x
     t_training = t
+    x_test = list()
+    t_test = list()
 
     # Class B
     removal_pos_b = list()
@@ -121,11 +127,13 @@ def generate_training_b(x, t, percentage):
         if (t_training[0,aux] == -1):
             if (aux not in removal_pos_b):
                 removal_pos_b.append(aux)
+                x_test.append(x_training[:,aux])
+                t_test.append(t_training[:,aux])
 
     x_training = np.delete(x_training, removal_pos_b, axis=1)
     t_training = np.delete(t_training, removal_pos_b, axis=1)
     
-    return x_training, t_training
+    return x_training, t_training, np.transpose(np.array(x_test)), np.transpose(np.array(t_test))
 
 """
 Data removal condition:
@@ -134,10 +142,10 @@ Data removal condition:
 def generate_training_a_b(x, t, percentage):
     x_training = x
     t_training = t
-    x_training, t_training = generate_training_a(x_training, t_training, percentage)
-    x_training, t_training = generate_training_b(x_training, t_training, percentage)
+    x_training, t_training, x_test_1, t_test_1 = generate_training_a(x_training, t_training, percentage)
+    x_training, t_training, x_test_2, t_test_2 = generate_training_b(x_training, t_training, percentage)    
     
-    return x_training, t_training
+    return x_training, t_training, np.concatenate((x_test_1, x_test_2), axis=1), np.concatenate((t_test_1, t_test_2), axis=1)
 
 """
 Data removal condition:
@@ -147,6 +155,8 @@ Data removal condition:
 def generate_training_a_subsets(x, t, percentage1, percentage2):
     x_training = x
     t_training = t
+    x_test = list()
+    t_test = list()
 
     # Removing negative values
 
@@ -160,6 +170,8 @@ def generate_training_a_subsets(x, t, percentage1, percentage2):
     for i in range(cnt_neg):
         pos = randrange(len(cnt)) # Get random position in the array
         removal.append(cnt[pos]) # Append the value stored in the position
+        x_test.append(x_training[:,cnt[pos]])
+        t_test.append(t_training[:,cnt[pos]])
         cnt = np.delete(cnt, pos) # Delete appended value
 
     x_training = np.delete(x_training, removal, axis=1)
@@ -177,9 +189,11 @@ def generate_training_a_subsets(x, t, percentage1, percentage2):
     for i in range(cnt_pos):
         pos = randrange(len(cnt)) # Get random position in the array
         removal.append(cnt[pos]) # Append the value stored in the position
+        x_test.append(x_training[:,cnt[pos]])
+        t_test.append(t_training[:,cnt[pos]])
         cnt = np.delete(cnt, pos) # Delete appended value
 
     x_training = np.delete(x_training, removal, axis=1)
     t_training = np.delete(t_training, removal, axis=1)
 
-    return x_training, t_training
+    return x_training, t_training, np.transpose(np.array(x_test)), np.transpose(np.array(t_test))
