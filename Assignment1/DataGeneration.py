@@ -5,15 +5,17 @@ SAMPLES = 100
 SEPARATION = 0.33
 
 def linearly_separable_data(mA, sigmaA, mB, sigmaB):
-
-    classA_x1 = np.random.randn(1,SAMPLES) * sigmaA + mA[0] + SEPARATION
-    classA_x2 = np.random.randn(1,SAMPLES) * sigmaA + mA[1] + SEPARATION
+    classA_x1 = np.zeros(SAMPLES)
+    classA_x2 = np.zeros(SAMPLES)
+    classB_x1 = np.zeros(SAMPLES)
+    classB_x2 = np.zeros(SAMPLES)
+    for i in range(SAMPLES):
+        classA_x1[i] = np.random.normal() * sigmaA + mA[0] + SEPARATION
+        classA_x2[i] = np.random.normal() * sigmaA + mA[1] + SEPARATION
+        classB_x1[i] = np.random.normal() * sigmaB + mB[0] - SEPARATION
+        classB_x2[i] = np.random.normal() * sigmaB + mB[1] - SEPARATION
     classA = np.vstack([classA_x1, classA_x2])
     labelsA = np.ones([1,SAMPLES])
-    
-    
-    classB_x1 = np.random.randn(1,SAMPLES) * sigmaB + mB[0] - SEPARATION
-    classB_x2 = np.random.randn(1,SAMPLES) * sigmaB + mB[1] - SEPARATION
     classB = np.vstack([classB_x1, classB_x2])
     labelsB = -np.ones([1,SAMPLES])
     
@@ -33,16 +35,19 @@ def linearly_separable_data(mA, sigmaA, mB, sigmaB):
 
 def new_data_generation(m_a, m_b, sigma_a, sigma_b):
     classA_x1 = np.zeros(SAMPLES)
+    classA_x2 = np.zeros(SAMPLES)
+    classB_x1 = np.zeros(SAMPLES)
+    classB_x2 = np.zeros(SAMPLES)
     for i in range(round(SAMPLES/2)):
-        classA_x1[i] = np.random.randn() * sigma_a - m_a[0]
+        classA_x1[i] = np.random.normal() * sigma_a - m_a[0]
     for i in range(round(SAMPLES/2)):
-        classA_x1[i + round(SAMPLES/2)] = np.random.randn() * sigma_a + m_a[0]  
-    classA_x2 = np.random.randn(1,SAMPLES) * sigma_a + m_a[1]
+        classA_x1[i + round(SAMPLES/2)] = np.random.normal() * sigma_a + m_a[0]
+    for i in range(SAMPLES):
+        classA_x2[i] = np.random.normal() * sigma_a + m_a[1]
+        classB_x1[i] = np.random.normal() * sigma_b + m_b[0]
+        classB_x2[i] = np.random.normal() * sigma_b + m_b[1]
     classA = np.vstack([classA_x1, classA_x2])
-    labelsA = np.ones([1,SAMPLES])    
-    
-    classB_x1 = np.random.randn(1,SAMPLES) * sigma_b + m_b[0]
-    classB_x2 = np.random.randn(1,SAMPLES) * sigma_b + m_b[1]
+    labelsA = np.ones([1,SAMPLES])
     classB = np.vstack([classB_x1, classB_x2])
     labelsB = -np.ones([1,SAMPLES])
     
@@ -61,13 +66,17 @@ def new_data_generation(m_a, m_b, sigma_a, sigma_b):
     return X, t
 
 def non_linearly_separable_data(m, sigma):
-    classA_x1 = np.random.randn(1,SAMPLES) * sigma + m[0]
-    classA_x2 = np.random.randn(1,SAMPLES) * sigma + m[1]
+    classA_x1 = np.zeros(SAMPLES)
+    classA_x2 = np.zeros(SAMPLES)
+    classB_x1 = np.zeros(SAMPLES)
+    classB_x2 = np.zeros(SAMPLES)
+    for i in range(SAMPLES):
+        classA_x1[i] = np.random.normal() * sigma + m[0]
+        classA_x2[i] = np.random.normal() * sigma + m[1]
+        classB_x1[i] = np.random.normal() * sigma + m[0]
+        classB_x2[i] = np.random.normal() * sigma + m[1]
     classA = np.vstack([classA_x1, classA_x2])
     labelsA = np.ones([1,SAMPLES])  
-    
-    classB_x1 = np.random.randn(1,SAMPLES) * sigma + m[0]
-    classB_x2 = np.random.randn(1,SAMPLES) * sigma + m[1]
     classB = np.vstack([classB_x1, classB_x2])
     labelsB = -np.ones([1,SAMPLES])
     
