@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 CONVERGENCE = 0.001
-ITERATIONS = 20
-ETA = 0.001
+ITERATIONS = 1000
+ETA = 0.01
 D_BATCH = 1
 D_SEQUENTIAL = 2
 PERCEPTRON = 3
