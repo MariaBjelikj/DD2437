@@ -120,27 +120,28 @@ def weight_update(x, dw, dv, delta_h, delta_o, h, w, v):
     V = v + dv * ETA
     return W, V
 
-def plot_boundary_multilayer(x, w, v, dw, dv, t, x_grid, y_grid):
+def plot_boundary_multilayer(x, w, v, dw, dv, t, x_grid, y_grid, WantToPlot = True):
     for i in range(ITERATIONS):
         h, o = forward_pass(x, w, v)
         delta_o, delta_h = backward_pass(t, w, v, o, h)
         w, v = weight_update(x, dw, dv, delta_h, delta_o, h, w, v)
-        x_input = np.c_[x_grid.ravel(), y_grid.ravel()]
-        x_input = np.transpose(x_input)
-        x_input = np.vstack((x_input, np.ones((x_input.shape[1]))))
-        z = forward_pass(x_input, w, v)[1]
-        z = z.reshape(x_grid.shape)
-        plt.clf()
-        axes = plt.gca()
-        axes.set_xlim(min(x[0,:]), max(x[0,:]))
-        axes.set_ylim(min(x[1,:]), max(x[1,:]))
-        plt.contour(x_grid, y_grid, z, levels=[0])
-        plt.title("Multilayer Perceptron: Iteration %i" %(i+1))
-        plt.xlabel("$\mathregular{X_1}$ coordinate")
-        plt.ylabel("$\mathregular{X_2}$ coordinate")
-        plt.scatter(x[0,:], x[1,:], c=t[0,:])
-        if (i == 0 or i == ITERATIONS - 1):
-            plt.show(block=True)
-        else:
-            plt.show(block=False)
-            plt.pause(0.005)
+        if WantToPlot == True:
+            x_input = np.c_[x_grid.ravel(), y_grid.ravel()]
+            x_input = np.transpose(x_input)
+            x_input = np.vstack((x_input, np.ones((x_input.shape[1]))))
+            z = forward_pass(x_input, w, v)[1]
+            z = z.reshape(x_grid.shape)
+            plt.clf()
+            axes = plt.gca()
+            axes.set_xlim(min(x[0,:]), max(x[0,:]))
+            axes.set_ylim(min(x[1,:]), max(x[1,:]))
+            plt.contour(x_grid, y_grid, z, levels=[0])
+            plt.title("Multilayer Perceptron: Iteration %i" %(i+1))
+            plt.xlabel("$\mathregular{X_1}$ coordinate")
+            plt.ylabel("$\mathregular{X_2}$ coordinate")
+            plt.scatter(x[0,:], x[1,:], c=t[0,:])
+            if (i == 0 or i == ITERATIONS - 1):
+                plt.show(block=True)
+            else:
+                plt.show(block=False)
+                plt.pause(0.005)
