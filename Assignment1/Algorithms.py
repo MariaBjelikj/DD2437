@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import subprocess as sp
+from mpl_toolkits import mplot3d
 
 CONVERGENCE = 0.1
 ITERATIONS = 20
@@ -188,7 +189,7 @@ def encoder_misclassification(x, y):
     cnt = 0
     for i in range(x.shape[0]):
         for j in range(x.shape[1]):
-            if ((x[i,j] > 0 and y[i,j < 0]) or (x[i,j] < 0 and y[i,j] > 0)):
+            if ((x[i,j] > 0 and y[i,j] < 0) or (x[i,j] < 0 and y[i,j] > 0)):
                 cnt += 1
     return cnt
 
@@ -209,3 +210,36 @@ def encoder(x, w, v, dw, dv, t):
         print("Convergence achieved")
     print("Error (MSE)", error)
     print("Number of misclassified data:", encoder_misclassification(x, forward_pass(x, w, v)[1]))
+
+def function_approximation(x, w, v, dw, dv, t, x_grid, y_grid, n_hidden):
+    cnt = 0
+    z = 0
+    error = float('inf')
+    pbar = tqdm(total=100)
+    while (cnt < ITERATIONS_MULTI and error > CONVERGENCE):
+        pbar.update(round(1/ITERATIONS_MULTI * 100, 2))
+        h, o = forward_pass(x, w, v)
+        delta_o, delta_h = backward_pass(t, w, v, o, h)
+        w, v = weight_update(x, dw, dv, delta_h, delta_o, h, w, v)
+        x_input = np.c_[x_grid.ravel(), y_grid.ravel()]
+        x_input = np.transpose(x_input)
+        x_input = np.vstack((x_input, np.ones((x_input.shape[1]))))
+        error = compute_mse(forward_pass(x, w, v)[1], t)
+        z = forward_pass(x_input, w, v)[1]
+        z = z.reshape(x_grid.shape)
+        cnt += 1
+    pbar.close()
+    sp.call('clear',shell=True)
+    if (error < CONVERGENCE):
+        print("Convergence achieved")
+    print("Error (MSE)", error)
+    if (PLOTTING):
+        fig = plt.figure()
+        ax = plt.axes(projection='3d')
+        ax.plot_surface(x_grid, y_grid, z, rstride=1, cstride=1,
+                cmap='viridis', edgecolor='none')
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z');
+        plt.title("Prediction with %i nodes" %n_hidden)
+        plt.show()
