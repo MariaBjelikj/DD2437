@@ -1,9 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+import subprocess as sp
 
-CONVERGENCE = 0.001
-ITERATIONS = 1000
-ETA = 0.01
+CONVERGENCE = 0.1
+ITERATIONS = 20
+ITERATIONS_MULTI = 10000
+ETA = 0.1
 D_BATCH = 1
 D_SEQUENTIAL = 2
 PERCEPTRON = 3
@@ -120,27 +123,61 @@ def weight_update(x, dw, dv, delta_h, delta_o, h, w, v):
     V = v + dv * ETA
     return W, V
 
-def plot_boundary_multilayer(x, w, v, dw, dv, t, x_grid, y_grid):
-    for i in range(ITERATIONS):
+def compute_mse(o, t):
+    return np.sum(np.square(o - t)) / len(o)
+
+def compute_misclassifications(o, t):
+    cnt = 0
+    for i in range(o.shape[1]):
+        if ((o[0,i] > 0 and t[0,i] < 0) or (o[0,i] < 0 and t[0,i] > 0)):
+            cnt += 1
+    return cnt, cnt / o.shape[1]
+
+def plot_boundary_multilayer(x, w, v, dw, dv, t, x_grid, y_grid, x_test, t_test):
+    z = 0
+    cnt = 0
+    error = float('inf')
+    pbar = tqdm(total=100)
+    learning_training = list()
+    learning_testing = list()
+    while (cnt < ITERATIONS_MULTI and error > CONVERGENCE):
+        pbar.update(round(1/ITERATIONS_MULTI * 100, 2))
         h, o = forward_pass(x, w, v)
         delta_o, delta_h = backward_pass(t, w, v, o, h)
         w, v = weight_update(x, dw, dv, delta_h, delta_o, h, w, v)
         x_input = np.c_[x_grid.ravel(), y_grid.ravel()]
         x_input = np.transpose(x_input)
         x_input = np.vstack((x_input, np.ones((x_input.shape[1]))))
+        error = compute_mse(forward_pass(x, w, v)[1], t)
+        learning_training.append(error)
+        learning_testing.append(compute_mse(forward_pass(x_test, w, v)[1], t_test))
         z = forward_pass(x_input, w, v)[1]
         z = z.reshape(x_grid.shape)
-        plt.clf()
-        axes = plt.gca()
-        axes.set_xlim(min(x[0,:]), max(x[0,:]))
-        axes.set_ylim(min(x[1,:]), max(x[1,:]))
-        plt.contour(x_grid, y_grid, z, levels=[0])
-        plt.title("Multilayer Perceptron: Iteration %i" %(i+1))
-        plt.xlabel("$\mathregular{X_1}$ coordinate")
-        plt.ylabel("$\mathregular{X_2}$ coordinate")
-        plt.scatter(x[0,:], x[1,:], c=t[0,:])
-        if (i == 0 or i == ITERATIONS - 1):
-            plt.show(block=True)
-        else:
-            plt.show(block=False)
-            plt.pause(0.005)
+        cnt += 1
+    pbar.close()
+    sp.call('clear',shell=True)
+    plt.clf()
+    axes = plt.gca()
+    axes.set_xlim(min(x_test[0,:]), max(x_test[0,:]))
+    axes.set_ylim(min(x_test[1,:]), max(x_test[1,:]))
+    plt.contour(x_grid, y_grid, z, levels=[0])
+    if (cnt < ITERATIONS_MULTI):
+        plt.title("Multilayer Perceptron: Convergence found in %i iterations" %cnt)
+    else:
+        plt.title("Multilayer Perceptron: %i iterations" %cnt)
+    plt.xlabel("$\mathregular{X_1}$ coordinate")
+    plt.ylabel("$\mathregular{X_2}$ coordinate")
+    plt.scatter(x_test[0,:], x_test[1,:], c=t_test[0,:])
+    plt.show()
+    np.set_printoptions(precision=6)
+    print("Final error: %f" %compute_mse(forward_pass(x_test, w, v)[1], t_test))
+    data, ratio = compute_misclassifications(forward_pass(x_test, w, v)[1], t_test)
+    print("Misclassified data: %i" %data)
+    print("Misclassified ratio: %f" %ratio)
+    plt.plot(range(cnt), learning_training, color="blue", label="Error training")
+    plt.plot(range(cnt), learning_testing, color="red", label="Error testing")
+    plt.xlabel("Epochs")
+    plt.ylabel("Error (MSE)")
+    plt.title("Learning curves: Training vs Testing")
+    plt.legend()
+    plt.show()
