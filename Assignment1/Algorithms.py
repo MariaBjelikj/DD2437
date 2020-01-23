@@ -211,7 +211,7 @@ def encoder(x, w, v, dw, dv, t):
     if (error < CONVERGENCE):
         print("Convergence achieved")
     print("Error (MSE)", error)
-    print("Number of misclassified data:", encoder_misclassification(x, forward_pass(x, w, v)[1]))
+    print("Number of misclassified data:", encoder_misclassification(forward_pass(x, w, v)[1], t))
 
 def function_approximation(x, w, v, dw, dv, t, x_grid, y_grid, n_hidden):
     cnt = 0
