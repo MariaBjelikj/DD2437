@@ -229,11 +229,18 @@ def enconder_data():
 # ---------------------------- DATA QUESTION 3.2.3. ---------------------------- #
 """
 Bell-shaped gaussian 
-FINISH TOMORROW 
 """
 def gaussian_data():
-    x = np.transpose(np.arange(-5, 5, 0.5))
-    y = np.transpose(np.arange(-5, 5, 0.5))
+    data = np.arange(-5, 5, 0.5)
+    x = np.transpose(data.reshape((1,len(data))))
+    y = np.transpose(data.reshape((1,len(data))))
     z = np.dot(np.exp(-x*x*0.1), np.transpose(np.exp(-y*y*0.1))) - 0.5
+    xx, yy = np.meshgrid(x, y)
+    size = len(x)*len(y)
+    xx = np.reshape(xx, (1, size))
+    yy = np.reshape(yy, (1, size))
+        
+    X = np.vstack((xx, yy, np.ones((size))))
+    t = np.reshape(z, (1,size))
     
-    return 
+    return X, t
