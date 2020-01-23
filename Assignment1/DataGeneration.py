@@ -1,4 +1,5 @@
 import numpy as np
+import random as random
 from random import randrange
 
 SAMPLES = 100
@@ -219,10 +220,12 @@ only one input variable is active (=1)
 
 def enconder_data():
     X = -np.ones((8, 8))
-    for i in range(X.shape[1]):
-        #X[randrange(X.shape[0]),i] = -1     
-        X[i,i] = 1
+    index = random.sample(range(X.shape[0]), 8) 
+    for i in range(X.shape[0]):
+        X[index[i],i] = 1     
+        #X[i,i] = 1
     t = X.copy()
+    X = np.vstack((X, np.ones((X.shape[1]))))
     return X, t    
 
 

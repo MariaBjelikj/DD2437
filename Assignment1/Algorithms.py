@@ -185,11 +185,11 @@ def plot_boundary_multilayer(x, w, v, dw, dv, t, x_grid, y_grid, x_test, t_test)
         plt.legend()
         plt.show()
 
-def encoder_misclassification(x, y):
+def encoder_misclassification(t, y):
     cnt = 0
-    for i in range(x.shape[0]):
-        for j in range(x.shape[1]):
-            if ((x[i,j] > 0 and y[i,j] < 0) or (x[i,j] < 0 and y[i,j] > 0)):
+    for i in range(t.shape[0]):
+        for j in range(t.shape[1]):
+            if ((t[i,j] > 0 and y[i,j] < 0) or (t[i,j] < 0 and y[i,j] > 0)):
                 cnt += 1
     return cnt
 
@@ -202,7 +202,9 @@ def encoder(x, w, v, dw, dv, t):
         h, o = forward_pass(x, w, v)
         delta_o, delta_h = backward_pass(t, w, v, o, h)
         w, v = weight_update(x, dw, dv, delta_h, delta_o, h, w, v)
-        error = compute_mse(forward_pass(x, w, v)[1], t)
+        
+        y_hat = forward_pass(x, w, v)[1]
+        error = compute_mse(y_hat, t)
         cnt += 1
     pbar.close()
     sp.call('clear',shell=True)
