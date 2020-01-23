@@ -5,8 +5,8 @@ import subprocess as sp
 
 CONVERGENCE = 0.1
 ITERATIONS = 20
-ITERATIONS_MULTI = 10000
-ETA = 0.1
+ITERATIONS_MULTI = 100000
+ETA = 1
 D_BATCH = 1
 D_SEQUENTIAL = 2
 PERCEPTRON = 3
@@ -184,11 +184,11 @@ def plot_boundary_multilayer(x, w, v, dw, dv, t, x_grid, y_grid, x_test, t_test)
         plt.legend()
         plt.show()
 
-def encoder_misclassification(x, y):
+def encoder_misclassification(t, y):
     cnt = 0
-    for i in range(x.shape[0]):
-        for j in range(x.shape[1]):
-            if ((x[i,j] > 0 and y[i,j < 0]) or (x[i,j] < 0 and y[i,j] > 0)):
+    for i in range(t.shape[0]):
+        for j in range(t.shape[1]):
+            if ((t[i,j] > 0 and y[i,j] < 0) or (t[i,j] < 0 and y[i,j] > 0)):
                 cnt += 1
     return cnt
 
@@ -201,11 +201,23 @@ def encoder(x, w, v, dw, dv, t):
         h, o = forward_pass(x, w, v)
         delta_o, delta_h = backward_pass(t, w, v, o, h)
         w, v = weight_update(x, dw, dv, delta_h, delta_o, h, w, v)
-        error = compute_mse(forward_pass(x, w, v)[1], t)
+        
+        y_hat = forward_pass(x, w, v)[1]
+        error = compute_mse(y_hat, t)
         cnt += 1
     pbar.close()
     sp.call('clear',shell=True)
     if (error < CONVERGENCE):
         print("Convergence achieved")
     print("Error (MSE)", error)
-    print("Number of misclassified data:", encoder_misclassification(x, forward_pass(x, w, v)[1]))
+    print("Number of misclassified data:", encoder_misclassification(t, y_hat))
+    
+    print("real data\n", t)
+    
+    for i in range(y_hat.shape[0]):
+        for j in range(y_hat.shape[1]):
+            if y_hat[i,j] < 0: 
+                y_hat[i,j] = -1
+            else: 
+                y_hat[i,j] = 1
+    print("\n estimated data\n", y_hat)
