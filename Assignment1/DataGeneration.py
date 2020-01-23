@@ -206,3 +206,34 @@ def generate_training_a_subsets(x, t, percentage1, percentage2):
     t_training = np.delete(t_training, removal, axis=1)
 
     return x_training, t_training, np.transpose(np.array(x_test)), np.transpose(np.array(t_test))
+
+
+
+
+# ---------------------------- DATA QUESTION 3.2.2. ---------------------------- #
+"""
+hour-glass shaped topology
+simple autoencoder with 8–3–8 feed-forward architecture
+only one input variable is active (=1)
+"""
+
+def enconder_data():
+    X = -np.ones((8, 8))
+    for i in range(X.shape[1]):
+        #X[randrange(X.shape[0]),i] = -1     
+        X[i,i] = 1
+    t = X.copy()
+    return X, t    
+
+
+# ---------------------------- DATA QUESTION 3.2.3. ---------------------------- #
+"""
+Bell-shaped gaussian 
+FINISH TOMORROW 
+"""
+def gaussian_data():
+    x = np.transpose(np.arange(-5, 5, 0.5))
+    y = np.transpose(np.arange(-5, 5, 0.5))
+    z = np.dot(np.exp(-x*x*0.1), np.transpose(np.exp(-y*y*0.1))) - 0.5
+    
+    return 

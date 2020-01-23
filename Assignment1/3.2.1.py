@@ -6,7 +6,7 @@ import Algorithms as alg
 
 SAMPLES = 100
 
-n_hidden = 10
+n_hidden = 3
 #x, t = dg.linearly_separable_data([1.0, 0.5], 0.5, [-1.0, 0], 0.5)
 x, t = dg.new_data_generation([1.0, 0.3], [0, -0.1], 0.2, 0.3)
 x, t, x_test, t_test= dg.generate_training_a_b(x, t, 0.25)
