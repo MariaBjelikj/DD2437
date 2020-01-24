@@ -6,11 +6,7 @@ from keras.layers import Dense
 from keras.callbacks import EarlyStopping
 from keras import regularizers 
 from sklearn.metrics import mean_squared_error as mse
-
-ITERATIONS = 100
-EARLY_STOP_THRESHOLD = 5 
-EARLY_STOP_TOLERANCE = 1e-6 
-
+import Constants as cte
 
 def best_validation_score(layers, train_input, train_output,\
                           validation_input, validation_output,\
@@ -26,7 +22,7 @@ def best_validation_score(layers, train_input, train_output,\
     for i in range(10):
 
         if flag == False: break
-        for iter in range(ITERATIONS):
+        for iter in range(cte.ITERATIONS):
             history = NN.fit(train_input, train_output, verbose=0)
             prediction = NN.predict(validation_input, verbose=0)
             validation_MSE.append(mse(validation_output, prediction))
@@ -35,10 +31,10 @@ def best_validation_score(layers, train_input, train_output,\
             if iter > 2: 
                 
                 # Check tolerence, break loop to early stop
-                if validation_MSE[-2] - validation_MSE[-1] < EARLY_STOP_TOLERANCE:
+                if validation_MSE[-2] - validation_MSE[-1] < cte.EARLY_STOP_TOLERANCE:
                     
                     # Check early stop threshold 
-                    if early_stop_count < EARLY_STOP_THRESHOLD: early_stop_count += 1
+                    if early_stop_count < cte.EARLY_STOP_THRESHOLD: early_stop_count += 1
                     else: break
                 
                 else: early_stop_count = 0

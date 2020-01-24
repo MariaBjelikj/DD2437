@@ -3,13 +3,7 @@ import matplotlib.pyplot as plt
 import time
 import DataGeneration as dg
 import Algorithms as alg
-
-CONVERGENCE = 0.001
-ITERATIONS = 50
-SAMPLES = 100
-D_BATCH = 1
-D_SEQUENTIAL = 2
-PERCEPTRON = 3
+import Constants as cte
 
 def main():
     
@@ -17,7 +11,7 @@ def main():
     m = [1.0, 0.5]
     sigma = 0.5
     x, t = dg.non_linearly_separable_data(m, sigma)
-    x_grid = np.arange(min(x[0,:]), max(x[0,:]), (max(x[0,:]) - min(x[0,:])) / SAMPLES)
+    x_grid = np.arange(min(x[0,:]), max(x[0,:]), (max(x[0,:]) - min(x[0,:])) / cte.SAMPLES)
     w = np.random.rand(t.shape[0], x.shape[0])
     print("Running algorithms for: Non-linearly separable data")
     alg.run_algorithms(x_grid, x, t, w)
@@ -31,7 +25,7 @@ def main():
     sigma_b = 0.3
     x, t = dg.new_data_generation(m_a, m_b, sigma_a, sigma_b)
 
-    x_grid = np.arange(min(x[0,:]), max(x[0,:]), (max(x[0,:]) - min(x[0,:])) / SAMPLES)
+    x_grid = np.arange(min(x[0,:]), max(x[0,:]), (max(x[0,:]) - min(x[0,:])) / cte.SAMPLES)
     w = np.random.rand(t.shape[0], x.shape[0])
     print("Running algorithms for: New generated non-linearly separable data")
     alg.run_algorithms(x_grid, x, t, w)
@@ -40,7 +34,7 @@ def main():
     x_temp = x.copy()
     t_temp = t.copy()
     x_temp, t_temp, x_test, t_test = dg.generate_training_a_b(x_temp, t_temp, 0.25)
-    x_grid = np.arange(min(x_temp[0,:]), max(x_temp[0,:]), (max(x_temp[0,:]) - min(x_temp[0,:])) / SAMPLES)
+    x_grid = np.arange(min(x_temp[0,:]), max(x_temp[0,:]), (max(x_temp[0,:]) - min(x_temp[0,:])) / cte.SAMPLES)
     # w can be equal, since t.shape[0] and x.shape[0] will not change (only column removal)
     print("Running algorithms for: New generated non-linearly separable data --> 25% removed in each class")
     alg.run_algorithms(x_grid, x_temp, t_temp, w)
@@ -49,7 +43,7 @@ def main():
     x_temp = x.copy()
     t_temp = t.copy()
     x_temp, t_temp, x_test, t_test = dg.generate_training_a(x_temp, t_temp, 0.5)
-    x_grid = np.arange(min(x_temp[0,:]), max(x_temp[0,:]), (max(x_temp[0,:]) - min(x_temp[0,:])) / SAMPLES)
+    x_grid = np.arange(min(x_temp[0,:]), max(x_temp[0,:]), (max(x_temp[0,:]) - min(x_temp[0,:])) / cte.SAMPLES)
     # w can be equal, since t.shape[0] and x.shape[0] will not change (only column removal)
     print("Running algorithms for: New generated non-linearly separable data --> 50% removed in class A")
     alg.run_algorithms(x_grid, x_temp, t_temp, w)
@@ -58,7 +52,7 @@ def main():
     x_temp = x.copy()
     t_temp = t.copy()
     x_temp, t_temp, x_test, t_test = dg.generate_training_b(x_temp, t_temp, 0.5)
-    x_grid = np.arange(min(x_temp[0,:]), max(x_temp[0,:]), (max(x_temp[0,:]) - min(x_temp[0,:])) / SAMPLES)
+    x_grid = np.arange(min(x_temp[0,:]), max(x_temp[0,:]), (max(x_temp[0,:]) - min(x_temp[0,:])) / cte.SAMPLES)
     # w can be equal, since t.shape[0] and x.shape[0] will not change (only column removal)
     print("Running algorithms for: New generated non-linearly separable data --> 50% removed in class B")
     alg.run_algorithms(x_grid, x_temp, t_temp, w)
@@ -67,7 +61,7 @@ def main():
     x_temp = x.copy()
     t_temp = t.copy()
     x_temp, t_temp, x_test, t_test = dg.generate_training_a_subsets(x_temp, t_temp, 0.2, 0.8)
-    x_grid = np.arange(min(x_temp[0,:]), max(x_temp[0,:]), (max(x_temp[0,:]) - min(x_temp[0,:])) / SAMPLES)
+    x_grid = np.arange(min(x_temp[0,:]), max(x_temp[0,:]), (max(x_temp[0,:]) - min(x_temp[0,:])) / cte.SAMPLES)
     # w can be equal, since t.shape[0] and x.shape[0] will not change (only column removal)
     print("Running algorithms for: New generated non-linearly separable data --> subsets removed in class A")
     alg.run_algorithms(x_grid, x_temp, t_temp, w)
