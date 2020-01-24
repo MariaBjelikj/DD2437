@@ -240,19 +240,35 @@ def gaussian_data(percentage):
 
     elements = round(x.shape[0] * percentage)
     x_training = x.copy()
-    y_training = y.copy()    
+    y_training = y.copy()
+    x_testing = np.zeros(elements)
+    y_testing = np.zeros(elements)
     for i in range(elements):
         aux = np.random.randint(low=0, high=x_training.shape[0] - 1)
+        x_testing[i] = x_training[aux]
         x_training = np.delete(x_training, aux)
+        y_testing[i] = y_training[aux]
         y_training = np.delete(y_training, aux)
-    x = np.transpose(np.reshape(x_training, (1, len(x_training))))
-    y = np.transpose(np.reshape(y_training, (1, len(y_training))))
-    z = np.dot(np.exp(-x*x*0.1), np.transpose(np.exp(-y*y*0.1))) - 0.5
-    xx, yy = np.meshgrid(x, y)
-    size = len(x)*len(y)
+    # Training
+    x_training = np.transpose(np.reshape(x_training, (1, len(x_training))))
+    y_training = np.transpose(np.reshape(y_training, (1, len(y_training))))
+    z_train = np.dot(np.exp(-x_training*x_training*0.1), np.transpose(np.exp(-y_training*y_training*0.1))) - 0.5
+    xx, yy = np.meshgrid(x_training, y_training)
+    size = len(x_training)*len(y_training)
     xx_ = np.reshape(xx, (1, size))
     yy_ = np.reshape(yy, (1, size))
-    X = np.vstack((xx_, yy_, np.ones((size))))
-    t = np.reshape(z, (1,size))
+    X_train = np.vstack((xx_, yy_, np.ones((size))))
+    t_train = np.reshape(z_train, (1,size))
+
+    # Testing
+    x_testing = np.array(np.transpose(np.reshape(x_testing, (1, len(x_testing)))))
+    y_testing = np.array(np.transpose(np.reshape(y_testing, (1, len(y_testing)))))
+    z_test = np.dot(np.exp(-x_testing*x_testing*0.1), np.transpose(np.exp(-y_testing*y_testing*0.1))) - 0.5
+    xx_test, yy_test = np.meshgrid(x_testing, y_testing)
+    size = len(x_testing)*len(y_testing)
+    xx_ = np.reshape(xx_test, (1, size))
+    yy_ = np.reshape(yy_test, (1, size))
+    X_test = np.vstack((xx_, yy_, np.ones((size))))
+    t_test = np.reshape(z_test, (1,size))
     
-    return X, t, xx, yy
+    return X_train, t_train, xx, yy, X_test, t_test

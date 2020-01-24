@@ -213,20 +213,20 @@ def encoder(x, w, v, dw, dv, t):
     print("Error (MSE)", error)
     print("Number of misclassified data:", encoder_misclassification(forward_pass(x, w, v)[1], t))
 
-def function_approximation(x, w, v, dw, dv, t, x_grid, y_grid, n_hidden):
+def function_approximation(x_train, w, v, dw, dv, t_train, x_grid, y_grid, n_hidden, x_test, t_test):
     cnt = 0
     z = 0
     error = float('inf')
     pbar = tqdm(total=100)
     while (cnt < ITERATIONS_MULTI and error > CONVERGENCE):
         pbar.update(round(1/ITERATIONS_MULTI * 100, 2))
-        h, o = forward_pass(x, w, v)
-        delta_o, delta_h = backward_pass(t, w, v, o, h)
-        w, v = weight_update(x, dw, dv, delta_h, delta_o, h, w, v)
+        h, o = forward_pass(x_train, w, v)
+        delta_o, delta_h = backward_pass(t_train, w, v, o, h)
+        w, v = weight_update(x_train, dw, dv, delta_h, delta_o, h, w, v)
         x_input = np.c_[x_grid.ravel(), y_grid.ravel()]
         x_input = np.transpose(x_input)
         x_input = np.vstack((x_input, np.ones((x_input.shape[1]))))
-        error = compute_mse(forward_pass(x, w, v)[1], t)
+        error = compute_mse(forward_pass(x_train, w, v)[1], t_train)
         z = forward_pass(x_input, w, v)[1]
         z = z.reshape(x_grid.shape)
         cnt += 1
@@ -235,6 +235,7 @@ def function_approximation(x, w, v, dw, dv, t, x_grid, y_grid, n_hidden):
     if (error < CONVERGENCE):
         print("Convergence achieved")
     print("Error (MSE)", error)
+    print("Error Testing: %f" %compute_mse(forward_pass(x_test, w, v)[1], t_test))
     if (PLOTTING):
         fig = plt.figure()
         ax = plt.axes(projection='3d')
