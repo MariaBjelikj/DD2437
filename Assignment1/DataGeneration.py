@@ -1,4 +1,5 @@
 import numpy as np
+import random as random
 from random import randrange
 
 SAMPLES = 100
@@ -106,13 +107,13 @@ def generate_training_a(x, t, percentage):
 
     # Class A
     removal_pos_a = list()
-    while (len(removal_pos_a) < round(SAMPLES * percentage)):
-        aux = np.random.randint(low=0, high=x_training.shape[1] - 1)
-        if (t_training[0,aux] == 1):
-            if (aux not in removal_pos_a):
-                removal_pos_a.append(aux)
-                x_test.append(x_training[:,aux])
-                t_test.append(t_training[:,aux])
+    positions = range(x_training.shape[1])
+    while (len(removal_pos_a) < round(x_training.shape[1] * percentage)):
+        aux = np.random.randint(low=0, high=len(positions) - 1)
+        if (t_training[0,positions[aux]] > 0):
+            removal_pos_a.append(positions[aux])
+            x_test.append(x_training[:,positions[aux]])
+            t_test.append(t_training[:,positions[aux]])
 
     x_training = np.delete(x_training, removal_pos_a, axis=1)
     t_training = np.delete(t_training, removal_pos_a, axis=1)
@@ -131,9 +132,9 @@ def generate_training_b(x, t, percentage):
 
     # Class B
     removal_pos_b = list()
-    while (len(removal_pos_b) < round(SAMPLES * percentage)):
+    while (len(removal_pos_b) < round(x_training.shape[1] * percentage)):
         aux = np.random.randint(low=0, high=x_training.shape[1] - 1)
-        if (t_training[0,aux] == -1):
+        if (t_training[0,aux] < 0):
             if (aux not in removal_pos_b):
                 removal_pos_b.append(aux)
                 x_test.append(x_training[:,aux])
@@ -171,7 +172,7 @@ def generate_training_a_subsets(x, t, percentage1, percentage2):
 
     cnt = list()
     for i in range(x_training.shape[1]):
-        if (x_training[1,i] < 0 and t_training[0,i] == 1):
+        if (x_training[1,i] < 0 and t_training[0,i] > 0):
             cnt.append(i) # Position of a negative value
 
     cnt_neg = round(len(cnt) * percentage1) # Number of negative values to remove
@@ -190,7 +191,7 @@ def generate_training_a_subsets(x, t, percentage1, percentage2):
 
     cnt = list()
     for i in range(x_training.shape[1]):
-        if (x_training[1,i] > 0 and t_training[0,i] == 1):
+        if (x_training[1,i] > 0 and t_training[0,i] > 0):
             cnt.append(i) # Position of a positive value
 
     cnt_pos = round(len(cnt) * percentage2) # Number of positive values to remove
@@ -219,10 +220,12 @@ only one input variable is active (=1)
 
 def enconder_data():
     X = -np.ones((8, 8))
-    for i in range(X.shape[1]):
-        #X[randrange(X.shape[0]),i] = -1     
-        X[i,i] = 1
+    index = random.sample(range(X.shape[0]), 8) 
+    for i in range(X.shape[0]):
+        X[index[i],i] = 1     
+        #X[i,i] = 1
     t = X.copy()
+    X = np.vstack((X, np.ones((X.shape[1]))))
     return X, t    
 
 
@@ -230,17 +233,26 @@ def enconder_data():
 """
 Bell-shaped gaussian 
 """
-def gaussian_data():
+def gaussian_data(percentage):
     data = np.arange(-5, 5, 0.5)
     x = np.transpose(data.reshape((1,len(data))))
     y = np.transpose(data.reshape((1,len(data))))
+
+    elements = round(x.shape[0] * percentage)
+    x_training = x.copy()
+    y_training = y.copy()    
+    for i in range(elements):
+        aux = np.random.randint(low=0, high=x_training.shape[0] - 1)
+        x_training = np.delete(x_training, aux)
+        y_training = np.delete(y_training, aux)
+    x = np.transpose(np.reshape(x_training, (1, len(x_training))))
+    y = np.transpose(np.reshape(y_training, (1, len(y_training))))
     z = np.dot(np.exp(-x*x*0.1), np.transpose(np.exp(-y*y*0.1))) - 0.5
     xx, yy = np.meshgrid(x, y)
     size = len(x)*len(y)
-    xx = np.reshape(xx, (1, size))
-    yy = np.reshape(yy, (1, size))
-        
-    X = np.vstack((xx, yy, np.ones((size))))
+    xx_ = np.reshape(xx, (1, size))
+    yy_ = np.reshape(yy, (1, size))
+    X = np.vstack((xx_, yy_, np.ones((size))))
     t = np.reshape(z, (1,size))
     
-    return X, t
+    return X, t, xx, yy
