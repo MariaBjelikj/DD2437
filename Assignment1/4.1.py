@@ -7,16 +7,16 @@ from keras.callbacks import EarlyStopping
 from keras import regularizers 
 from sklearn.metrics import mean_squared_error as mse
 
-ITERATIONS = 4000
-EARLY_STOP_THRESHOLD = 10 # number of fails before early stop
-EARLY_STOP_TOLERANCE = 1e-6 # next validation must to better by this amount compared to this validation
+ITERATIONS = 100
+EARLY_STOP_THRESHOLD = 5 
+EARLY_STOP_TOLERANCE = 1e-6 
 
 
-def best_validation_score(layers, input_dim, train_input, train_output,\
+def best_validation_score(layers, train_input, train_output,\
                           validation_input, validation_output,\
                           test_input, test_output):
     
-    NN = neural_network(layers, input_dim)
+    NN = neural_network(layers)
 
     early_stop_count = 0
     validation_MSE = [] # to store all MSE
@@ -24,16 +24,15 @@ def best_validation_score(layers, input_dim, train_input, train_output,\
     flag = True
 
     for i in range(10):
-    #while failed and num_failed < 5:
+
         if flag == False: break
-        i += 1
         for iter in range(ITERATIONS):
             history = NN.fit(train_input, train_output, verbose=0)
-            prediction = NN.predict(validation_input)
+            prediction = NN.predict(validation_input, verbose=0)
             validation_MSE.append(mse(validation_output, prediction))
             
             # After 2 iterations, we can start comparing
-            if iter > 5: 
+            if iter > 2: 
                 
                 # Check tolerence, break loop to early stop
                 if validation_MSE[-2] - validation_MSE[-1] < EARLY_STOP_TOLERANCE:
@@ -81,13 +80,13 @@ def generate_data():
 
     return x
 
-def neural_network(layers, input_dim):
+def neural_network(layers):
     
     num_layers = len(layers)
     model = Sequential()
 
     # Add first layer
-    model.add(Dense(layers[0], input_dim=input_dim, kernel_initializer='normal',\
+    model.add(Dense(layers[0], input_dim=5, kernel_initializer='normal',\
                     activation='relu', use_bias=True))
     
     # Add more layers
@@ -123,17 +122,21 @@ def main():
     test_output = output[-200:]
     
     # Plot data
-    plt.plot(np.arange(len(train_output)), train_output, label="Training data")
+    """plt.plot(np.arange(len(train_output)), train_output, label="Training data")
     plt.plot(np.arange(len(train_output), len(train_output) + len(validation_output)), validation_output, label="Validation data")
     plt.plot(np.arange(len(train_output) + len(validation_output), len(train_output) + len(validation_output) + len(test_output)), test_output, label="Test data")
     plt.legend()
     plt.title("Data")
     plt.xlabel("Inputs")
     plt.ylabel("Outputs")
-    plt.show()
+    plt.show()"""
     
-    layers = [30, 1]
-    input_dim = 5
+    # Different network configurations
+    layers_1 = [20, 1]
+    layers_2 = [70, 50, 1]
+    layers_3 = [120, 76, 1]
+    
+
     
     #NN, early_stop = neural_network(layers, input_dim)
     
@@ -144,15 +147,67 @@ def main():
     #print('MSE is. {}'.format(MSE))
 
 
-    history, NN, validation_MSE = best_validation_score(layers, input_dim, train_input, train_output,\
+    history_1, NN_1, validation_MSE_1 = best_validation_score(layers_1, train_input, train_output,\
+                          validation_input, validation_output,\
+                          test_input, test_output)
+    history_2, NN_2, validation_MSE_2 = best_validation_score(layers_2, train_input, train_output,\
+                          validation_input, validation_output,\
+                          test_input, test_output)
+    history_3, NN_3, validation_MSE_3 = best_validation_score(layers_3, train_input, train_output,\
                           validation_input, validation_output,\
                           test_input, test_output)
     
-    print(validation_MSE)
+    # Get best validation score
+    best_validation_MSE_1 = validation_MSE_1[-1]
+    print("Validation MSE for configuration 1:", best_validation_MSE_1)
     
-    best_validation_MSE = validation_MSE[-1]
+    best_validation_MSE_2 = validation_MSE_2[-1]
+    print("Validation MSE for configuration 2:", best_validation_MSE_2)
+    
+    best_validation_MSE_3 = validation_MSE_3[-1]
+    print("Validation MSE for configuration 3:", best_validation_MSE_3)
     
     
+    """ 
+    # Plot training and validation loss
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('Trainining and validation loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'], loc='upper left')
+    plt.show()"""
+
+    
+    # Prediction on test data
+    prediction_1 = NN_1.predict(test_input, verbose=0)
+    print("Test MSE for configuration 1:", mse(test_output, prediction_1))
+    
+    prediction_2 = NN_2.predict(test_input, verbose=0)
+    print("Test MSE for configuration 2:", mse(test_output, prediction_2))
+    
+    prediction_3 = NN_3.predict(test_input, verbose=0)
+    print("Test MSE for configuration 3:", mse(test_output, prediction_3))
+    
+
+    plt.plot(np.arange(len(train_output) + len(validation_output), len(train_output) + len(validation_output) + len(test_output)), test_output, label="Test data")
+    plt.plot(np.arange(len(train_output) + len(validation_output), len(train_output) + len(validation_output) + len(test_output)), prediction_1, 'ro', markersize=2)
+    plt.xlabel("Inputs")
+    plt.ylabel("Outputs")
+    plt.title("Test data targets vs. prediction")
+    plt.show()
+    
+    # Histogram of weights
+    weights, biases = NN_1.layers[0].get_weights()
+    plt.hist(weights)
+    plt.xlabel("Value of weights")
+    plt.ylabel("Weights")
+    plt.title("Weight distribution for {} units, lambda = 0".format(layers_1[0]))
+    plt.show()
+    
+    # TODO: table: configuration, validation MSE, test MSE
+    # TODO: different regularizations?
+
 
 
 if __name__ == "__main__":
