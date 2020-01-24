@@ -1,5 +1,56 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from keras.models import Sequential
+import keras
+from keras.layers import Dense
+from keras.callbacks import EarlyStopping
+from keras import regularizers 
+from sklearn.metrics import mean_squared_error as mse
+
+ITERATIONS = 4000
+EARLY_STOP_THRESHOLD = 10 # number of fails before early stop
+EARLY_STOP_TOLERANCE = 1e-6 # next validation must to better by this amount compared to this validation
+
+
+def best_validation_score(layers, input_dim, train_input, train_output,\
+                          validation_input, validation_output,\
+                          test_input, test_output):
+    
+    NN = neural_network(layers, input_dim)
+
+    early_stop_count = 0
+    validation_MSE = [] # to store all MSE
+
+    flag = True
+
+    for i in range(10):
+    #while failed and num_failed < 5:
+        if flag == False: break
+        i += 1
+        for iter in range(ITERATIONS):
+            history = NN.fit(train_input, train_output, verbose=0)
+            prediction = NN.predict(validation_input)
+            validation_MSE.append(mse(validation_output, prediction))
+            
+            # After 2 iterations, we can start comparing
+            if iter > 5: 
+                
+                # Check tolerence, break loop to early stop
+                if validation_MSE[-2] - validation_MSE[-1] < EARLY_STOP_TOLERANCE:
+                    
+                    # Check early stop threshold 
+                    if early_stop_count < EARLY_STOP_THRESHOLD: early_stop_count += 1
+                    else: break
+                
+                else: early_stop_count = 0
+                
+        # Evaluate test data and check success
+        if NN.evaluate(test_input, test_output) > 0.5:
+            flag = False
+            
+    return history, NN, validation_MSE
+            
+
 
 def x_previous(t, x):
     if t < 0: return 0
@@ -10,6 +61,8 @@ def x_current(t, x, beta, gamma, n, tau):
 
 def generate_data():
     """
+    Generates Mackey-Glass data as:
+        
     x(t+1) = x(t) + (0.2 * x(t - 25)) / (1 + x^10(t - 25)) - 0.1 * x(t)
     x(0) = 1.5
     x(t) = 0 for t < 0
@@ -18,7 +71,7 @@ def generate_data():
     gamma = 0.1
     n = 10
     tau = 25
-    N = 2000
+    N =  1600
 
     x = np.zeros(N)
     x[0] = 1.5
@@ -28,8 +81,30 @@ def generate_data():
 
     return x
 
+def neural_network(layers, input_dim):
+    
+    num_layers = len(layers)
+    model = Sequential()
+
+    # Add first layer
+    model.add(Dense(layers[0], input_dim=input_dim, kernel_initializer='normal',\
+                    activation='relu', use_bias=True))
+    
+    # Add more layers
+    for i in range(1, num_layers):
+        model.add(Dense(layers[i], kernel_initializer='normal', activation='relu', use_bias=True))
+
+    model.summary()
+    sgd = keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+    model.compile(optimizer=sgd, loss='mse')
+    #early_stop = EarlyStopping(monitor='val_loss', mode='min', verbose=1, min_delta=0.000001, patience=100)
+    
+    return model
+
+
 def main():
     """
+    Data: 
     t = 301:1500;
     input = [x(t - 20); x(t - 15); x(t - 10); x(t - 5); x(t)];
     output = x(t + 5);
@@ -37,25 +112,47 @@ def main():
     x = generate_data()
     t = np.arange(301, 1501)
     
-    for i in range(3):
-        for delay in range(-20, 1, 5):
-            input = np.transpose(np.array([i, x[t - delay]]))
-            output = x[t + 5]
+    Input = np.transpose(np.array([x[t - delay] for delay in range(-20, 1, 5)]))
+    output = x[t + 5]
     
-    train_input = input[:-500]
-    train_output = output[:-500]
-    validation_input = input[-500:-200] 
+    train_input = Input[:-200]
+    train_output = output[:-200]
+    validation_input = Input[-500:-200] 
     validation_output = output[-500:-200]
-    test_input = input[-200:] 
+    test_input = Input[-200:] 
     test_output = output[-200:]
-
+    
+    # Plot data
     plt.plot(np.arange(len(train_output)), train_output, label="Training data")
     plt.plot(np.arange(len(train_output), len(train_output) + len(validation_output)), validation_output, label="Validation data")
     plt.plot(np.arange(len(train_output) + len(validation_output), len(train_output) + len(validation_output) + len(test_output)), test_output, label="Test data")
     plt.legend()
     plt.title("Data")
+    plt.xlabel("Inputs")
+    plt.ylabel("Outputs")
     plt.show()
+    
+    layers = [30, 1]
+    input_dim = 5
+    
+    #NN, early_stop = neural_network(layers, input_dim)
+    
+    #history = NN.fit(train_input, train_output, epochs=1000, validation_split=0.3, \
+    #                 callbacks=[early_stop], batch_size=50, verbose=0)
 
+    #MSE = NN.evaluate(validation_input, validation_output, verbose=0) 
+    #print('MSE is. {}'.format(MSE))
+
+
+    history, NN, validation_MSE = best_validation_score(layers, input_dim, train_input, train_output,\
+                          validation_input, validation_output,\
+                          test_input, test_output)
+    
+    print(validation_MSE)
+    
+    best_validation_MSE = validation_MSE[-1]
+    
+    
 
 
 if __name__ == "__main__":
