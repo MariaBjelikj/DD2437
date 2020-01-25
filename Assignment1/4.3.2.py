@@ -134,54 +134,56 @@ def main():
     plt.ylabel("Outputs")
     plt.show()"""
     
-    # Different network configurations
-    layers_1 = [8, 4, 1]
-    layers_2 = [8, 3, 1]
-    layers_3 = [8, 4, 1]
-
-    history_1, NN_1, validation_MSE_1 = best_validation_score(layers_1, train_input, train_output,\
-                          validation_input, validation_output,\
-                          test_input, test_output)
-    history_2, NN_2, validation_MSE_2 = best_validation_score(layers_2, train_input, train_output,\
-                          validation_input, validation_output,\
-                          test_input, test_output)
-    history_3, NN_3, validation_MSE_3 = best_validation_score(layers_3, train_input, train_output,\
-                          validation_input, validation_output,\
-                          test_input, test_output)
+    mse_aux = float("-inf")
+    best_1= 0
+    best_2= 0
     
+    for i in range(1,9):
+        for j in range(1,2):
+        # Different network configurations
+            layers = [i, 1]
+
+            history, NN, validation_MSE = best_validation_score(layers, train_input, train_output,\
+                            validation_input, validation_output,\
+                            test_input, test_output)
+        
+            # Get best validation score
+            best_validation_MSE = validation_MSE[-1]
+            mse_validation = best_validation_MSE
+            
+            # Prediction on test data
+            
+            prediction = NN.predict(test_input, verbose=0)
+            mse_pred = mse(test_output, prediction)
+            
+            if mse_aux < mse_validation:
+                mse_aux = mse_validation
+                best_1 = i
+                best_2 = j
+    
+    print("best hidden layer size combination is:", best_1, best_2)
+    layers = [best_1, best_2, 1]
+    
+    
+
+    history, NN, validation_MSE = best_validation_score(layers, train_input, train_output,\
+                        validation_input, validation_output,\
+                        test_input, test_output)
+
     # Get best validation score
-    best_validation_MSE_1 = validation_MSE_1[-1]
-    print("Validation MSE for configuration 1:", best_validation_MSE_1)
-    
-    best_validation_MSE_2 = validation_MSE_2[-1]
-    print("Validation MSE for configuration 2:", best_validation_MSE_2)
-    
-    best_validation_MSE_3 = validation_MSE_3[-1]
-    print("Validation MSE for configuration 3:", best_validation_MSE_3)
-    
-    
-    """ 
-    # Plot training and validation loss
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('Trainining and validation loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'validation'], loc='upper left')
-    plt.show()"""
-
+    best_validation_MSE = validation_MSE[-1]
+    mse_validation = best_validation_MSE
     
     # Prediction on test data
-    prediction_1 = NN_1.predict(test_input, verbose=0)
-    print("Test MSE for configuration 1:", mse(test_output, prediction_1))
     
-    prediction_2 = NN_2.predict(test_input, verbose=0)
-    print("Test MSE for configuration 2:", mse(test_output, prediction_2))
+    prediction = NN.predict(test_input, verbose=0)
+    mse_pred = mse(test_output, prediction)
     
-    prediction_3 = NN_3.predict(test_input, verbose=0)
-    print("Test MSE for configuration 3:", mse(test_output, prediction_3))
+    print("Validation MSE for the best layer:", mse_validation)
+    print("Test MSE for the best layer:", mse_pred)
+
     x_grid = np.arange(len(train_output) + len(validation_output), len(train_output) + len(validation_output) + len(test_output))
-    predicted_plot = prediction_3
+    predicted_plot = prediction
     plt.plot(x_grid, test_output, label="Test data", color="Orange")
     plt.plot(x_grid, predicted_plot, markersize=2, label="Predicted data", color="#3185ac")
     plt.fill_between(x_grid, predicted_plot.ravel() + cte.NOISE_SIGMA, predicted_plot.ravel() - cte.NOISE_SIGMA, alpha=0.5, color="#51baea", edgecolor="#3185ac", label="Confidence interval")
@@ -192,11 +194,11 @@ def main():
     plt.show()
     
     # Histogram of weights
-    weights, biases = NN_1.layers[0].get_weights()
+    weights, biases = NN.layers[0].get_weights()
     plt.hist(weights)
     plt.xlabel("Value of weights")
     plt.ylabel("Weights")
-    plt.title("Weight distribution for {} units, lambda = 0".format(layers_1[0]))
+    plt.title("Weight distribution for {} units, lambda = 0".format(layers[0]))
     plt.show()
     
     # TODO: table: configuration, validation MSE, test MSE
