@@ -72,10 +72,7 @@ def generate_data():
     x[0] = 1.5
 
     for t in range(1, N):
-        if (cte.NOISE_SIGMA == 0):
-            x[t] = x_current(t, x, beta, gamma, n, tau)
-        else:
-            x[t] = x_current(t, x, beta, gamma, n, tau) + np.random.normal(0, cte.NOISE_SIGMA)
+        x[t] = x_current(t, x, beta, gamma, n, tau)
 
     return x
 
@@ -86,11 +83,11 @@ def neural_network(layers):
 
     # Add first layer
     model.add(Dense(layers[0], input_dim=5, kernel_initializer='normal',\
-                    activation='relu', activity_regularizer=regularizers.l2(cte.LAMBDA), use_bias=True))
+                    activity_regularizer=regularizers.l2(cte.LAMBDA), use_bias=True))
     
     # Add more layers
     for i in range(1, num_layers):
-        model.add(Dense(layers[i], kernel_initializer='normal', activation='relu', \
+        model.add(Dense(layers[i], kernel_initializer='normal', \
                         activity_regularizer=regularizers.l2(cte.LAMBDA), use_bias=True))
 
     model.summary()
@@ -115,8 +112,14 @@ def main():
     output = x[t + 5]
     
     train_input = Input[:-200]
+    if (cte.NOISE_SIGMA != 0):
+        for i in range(len(train_input)):
+            train_input[i] += np.random.normal(0, cte.NOISE_SIGMA)
     train_output = output[:-200]
     validation_input = Input[-500:-200] 
+    if (cte.NOISE_SIGMA != 0):
+        for i in range(len(validation_input)):
+            validation_input[i] += np.random.normal(0, cte.NOISE_SIGMA)
     validation_output = output[-500:-200]
     test_input = Input[-200:] 
     test_output = output[-200:]
@@ -132,18 +135,9 @@ def main():
     plt.show()"""
     
     # Different network configurations
-    layers_1 = [8, 3, 1]
-    layers_2 = [8, 4, 1]
-    layers_3 = [8, 2, 1]
-    
-    #NN, early_stop = neural_network(layers, input_dim)
-    
-    #history = NN.fit(train_input, train_output, epochs=1000, validation_split=0.3, \
-    #                 callbacks=[early_stop], batch_size=50, verbose=0)
-
-    #MSE = NN.evaluate(validation_input, validation_output, verbose=0) 
-    #print('MSE is. {}'.format(MSE))
-
+    layers_1 = [8, 4, 1]
+    layers_2 = [8, 3, 1]
+    layers_3 = [8, 4, 1]
 
     history_1, NN_1, validation_MSE_1 = best_validation_score(layers_1, train_input, train_output,\
                           validation_input, validation_output,\
@@ -186,13 +180,15 @@ def main():
     
     prediction_3 = NN_3.predict(test_input, verbose=0)
     print("Test MSE for configuration 3:", mse(test_output, prediction_3))
-    
-
-    plt.plot(np.arange(len(train_output) + len(validation_output), len(train_output) + len(validation_output) + len(test_output)), test_output, label="Test data")
-    plt.plot(np.arange(len(train_output) + len(validation_output), len(train_output) + len(validation_output) + len(test_output)), prediction_3, 'ro', markersize=2)
+    x_grid = np.arange(len(train_output) + len(validation_output), len(train_output) + len(validation_output) + len(test_output))
+    predicted_plot = prediction_3
+    plt.plot(x_grid, test_output, label="Test data", color="Orange")
+    plt.plot(x_grid, predicted_plot, markersize=2, label="Predicted data", color="#3185ac")
+    plt.fill_between(x_grid, predicted_plot.ravel() + cte.NOISE_SIGMA, predicted_plot.ravel() - cte.NOISE_SIGMA, alpha=0.5, color="#51baea", edgecolor="#3185ac", label="Confidence interval")
     plt.xlabel("Inputs")
     plt.ylabel("Outputs")
     plt.title("Test data targets vs. prediction")
+    plt.legend()
     plt.show()
     
     # Histogram of weights
