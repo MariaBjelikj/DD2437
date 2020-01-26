@@ -8,48 +8,42 @@ from keras import regularizers
 from sklearn.metrics import mean_squared_error as mse
 import Constants as cte
 
-def best_validation_score(layers, train_input, train_output,\
-                          validation_input, validation_output,\
-                          test_input, test_output):
+def best_validation_score(layers, train_input, train_output, validation_input, validation_output, test_input, test_output):
     
     NN = neural_network(layers)
-
     early_stop_count = 0
     validation_MSE = [] # to store all MSE
-
     flag = True
 
     for i in range(10):
-
-        if flag == False: break
+        if (flag == False): 
+            break
         for iter in range(cte.ITERATIONS):
-            history = NN.fit(train_input, train_output, verbose=0)
+            history = NN.fit(train_input, train_output, batch_size=50, verbose=0)
             prediction = NN.predict(validation_input, verbose=0)
             validation_MSE.append(mse(validation_output, prediction))
             
             # After 2 iterations, we can start comparing
-            if iter > 2: 
-                
+            if (iter > 2):                
                 # Check tolerence, break loop to early stop
-                if validation_MSE[-2] - validation_MSE[-1] < cte.EARLY_STOP_TOLERANCE:
-                    
+                if (validation_MSE[-2] - validation_MSE[-1] < cte.EARLY_STOP_TOLERANCE):
                     # Check early stop threshold 
-                    if early_stop_count < cte.EARLY_STOP_THRESHOLD: early_stop_count += 1
-                    else: break
-                
-                else: early_stop_count = 0
-                
+                    if (early_stop_count < cte.EARLY_STOP_THRESHOLD):
+                        early_stop_count += 1
+                    else:
+                        break
+                else:
+                    early_stop_count = 0
         # Evaluate test data and check success
-        if NN.evaluate(test_input, test_output) > 0.5:
+        if (NN.evaluate(test_input, test_output) > 0.5):
             flag = False
             
     return history, NN, validation_MSE
-            
-
 
 def x_previous(t, x):
-    if t < 0: return 0
-    else: return x[t]
+    if (t < 0):
+        return 0
+    return x[t]
     
 def x_current(t, x, beta, gamma, n, tau):
     return x_previous(t - 1, x) + (beta * x_previous(t - tau - 1, x)) / (1 + x_previous(t - tau - 1, x) ** n) - gamma * x_previous(t - 1, x)
@@ -67,7 +61,6 @@ def generate_data():
     n = 10
     tau = 25
     N =  1600
-
     x = np.zeros(N)
     x[0] = 1.5
 
@@ -82,17 +75,15 @@ def neural_network(layers):
     model = Sequential()
 
     # Add first layer
-    model.add(Dense(layers[0], input_dim=5, kernel_initializer='normal',\
-                    activity_regularizer=regularizers.l2(cte.LAMBDA), use_bias=True))
-    
+    model.add(Dense(layers[0], input_dim=5, activation='relu', kernel_regularizer=regularizers.l2(cte.LAMBDA), use_bias=True))
     # Add more layers
-    for i in range(1, num_layers):
-        model.add(Dense(layers[i], kernel_initializer='normal', \
-                        activity_regularizer=regularizers.l2(cte.LAMBDA), use_bias=True))
+    for i in range(1, num_layers-1):
+        model.add(Dense(layers[i], activation='relu', use_bias=True, kernel_regularizer=regularizers.l2(cte.LAMBDA)))
+    
+    model.add(Dense(layers[num_layers-1], activation='relu', use_bias=True))
 
     model.summary()
-    sgd = keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-    model.compile(optimizer=sgd, loss='mse')
+    model.compile(optimizer="adam", loss='mse')
     #early_stop = EarlyStopping(monitor='val_loss', mode='min', verbose=1, min_delta=0.000001, patience=100)
     
     return model
@@ -124,24 +115,14 @@ def main():
     test_input = Input[-200:] 
     test_output = output[-200:]
     
-    # Plot data
-    """plt.plot(np.arange(len(train_output)), train_output, label="Training data")
-    plt.plot(np.arange(len(train_output), len(train_output) + len(validation_output)), validation_output, label="Validation data")
-    plt.plot(np.arange(len(train_output) + len(validation_output), len(train_output) + len(validation_output) + len(test_output)), test_output, label="Test data")
-    plt.legend()
-    plt.title("Data")
-    plt.xlabel("Inputs")
-    plt.ylabel("Outputs")
-    plt.show()"""
-    
     mse_aux = float("-inf")
     best_1= 0
     best_2= 0
-    
+    """
     for i in range(1,9):
         for j in range(1,2):
         # Different network configurations
-            layers = [i, 1]
+            layers = [i, j, 1]
 
             history, NN, validation_MSE = best_validation_score(layers, train_input, train_output,\
                             validation_input, validation_output,\
@@ -160,11 +141,9 @@ def main():
                 mse_aux = mse_validation
                 best_1 = i
                 best_2 = j
-    
+    """
     print("best hidden layer size combination is:", best_1, best_2)
-    layers = [best_1, best_2, 1]
-    
-    
+    layers = [8, 8, 1]
 
     history, NN, validation_MSE = best_validation_score(layers, train_input, train_output,\
                         validation_input, validation_output,\
@@ -198,13 +177,10 @@ def main():
     plt.hist(weights)
     plt.xlabel("Value of weights")
     plt.ylabel("Weights")
-    plt.title("Weight distribution for {} units, lambda = 0".format(layers[0]))
+    plt.title("Weight distribution for {} units, lambda = {}".format(layers[0], cte.LAMBDA))
     plt.show()
     
-    # TODO: table: configuration, validation MSE, test MSE
     # TODO: different regularizations?
-
-
 
 if __name__ == "__main__":
     main()
