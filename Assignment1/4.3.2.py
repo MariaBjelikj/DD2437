@@ -7,6 +7,7 @@ from keras.callbacks import EarlyStopping
 from keras import regularizers 
 from sklearn.metrics import mean_squared_error as mse
 import Constants as cte
+import time
 
 def best_validation_score(layers, train_input, train_output, validation_input, validation_output, test_input, test_output):
     
@@ -183,4 +184,6 @@ def main():
     # TODO: different regularizations?
 
 if __name__ == "__main__":
+    start_time = time.time()
     main()
+    print("--- %s seconds ---" % (time.time() - start_time))
