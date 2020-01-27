@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn.metrics.pairwise import rbf_kernel
 
 def generate_data(type, noise):
     x_train = np.arange(0, 2 * np.pi, 0.1)[:,np.newaxis]
@@ -12,6 +11,8 @@ def generate_data(type, noise):
     if type == square:
         y_train = sign(np.sin(2 * x_train))
         y_test = sign(np.sin(2 * x_test))
+        
+    # TODO: Add noise for 3_2
     
 def phi(x, mean, variance):
     return np.exp(-(x - mean) ** 2 / (2 * variance ** 2))
