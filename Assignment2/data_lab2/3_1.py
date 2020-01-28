@@ -52,7 +52,7 @@ def main():
     rbf_nodes = 20
     
     for i in range(5, rbf_nodes):
-        mean = np.linspace(0, 2 * np.pi, rbf_nodes)
+        mean = np.linspace(0, 2 * np.pi, i)
         variance = 1
         
         w = train_batch(x_train, y_train, mean, variance)
