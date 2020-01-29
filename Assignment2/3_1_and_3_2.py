@@ -21,7 +21,7 @@ def generate_data(f_type, noise=False):
         y_test = np.sin(2 * x_test)
 
     # Creating y square
-    if f_type == "square":
+    if f_type == "square2x":
         y_train = np.where(np.sin(2 * x_train) >= 0, 1, -1)
         y_test = np.where(np.sin(2 * x_test) >= 0, 1, -1)
         
@@ -63,7 +63,7 @@ def train_online_delta_rule(x, y, mean, variance):
     for epoch in range(EPOCHS):
         for i in range(phi.shape[0]):
             phi_i = np.reshape(phi[i], (1, len(phi[i]))) # just to avoid dimension error
-            error = y[i] - np.dot(phi_i, w.T) # error from real value to predicted
+            error = y[i] - np.dot(phi_i, w.T) # error from real value to predicte
             delta_w = ETA * np.dot(phi_i.T, error) # equation 10
             w += delta_w.T
 
@@ -80,7 +80,7 @@ def train_online_delta_rule(x, y, mean, variance):
     plt.ylabel('MSE')
     plt.show()
     
-    return w
+    return w.T
 
 def predict(x, y, mean, variance, w):
     phi = phi_matrix(x, mean, variance)
@@ -89,6 +89,7 @@ def predict(x, y, mean, variance, w):
     return np.dot(phi, w)
 
 def predict_square(x, y, mean, variance, w):
+    # Use this function to transform the error to 0.0
     phi = phi_matrix(x, mean, variance)
     
     prediction = np.ones(y.shape)
@@ -109,24 +110,28 @@ def main():
     rbf_nodes = 20
     
     # Test error thresholds for various numbers of RBF nodes
-    for i in range(5, rbf_nodes):
+    for i in range(1, rbf_nodes):
         mean = np.linspace(0, 2 * np.pi, i)
         variance = 1
         w = train_batch(x_train, y_train, mean, variance)
         
         if f_type == "sin2x": y_predicted = predict(x_test, y_test, mean, variance, w)
         else: y_predicted = predict_square(x_test, y_test, mean, variance, w)
+        #y_predicted = predict(x_test, y_test, mean, variance, w)
         
         mean_square_error = mse(y_test, y_predicted)
-        # print("The MSE is: {}".format(MSE))
+        # print("The MSE is: {}".format(mean_square_error))
         mean_absolute_error = mae(y_test, y_predicted)
-        # print("The mean absolute error is: {}".format(MAE))
+        # print("The mean absolute error is: {}".format(mean_absolute_error))
 
         # Check if the error is lower than the error thresholds
         # We want to check against the largest threshold
         if len(error_thresholds) and mean_absolute_error < max(error_thresholds):
             # Threshold fulfilled, remove
+            print("Threshold {} removed for {} nodes.".format(max(error_thresholds), i))
+            print("Obtained error was {}".format(mean_absolute_error))
             error_thresholds.remove(max(error_thresholds))
+            
 
     plt.plot(x_train, y_train, label='real output')
     plt.plot(x_test, y_predicted, 'r--', label='prediction')
@@ -145,13 +150,13 @@ def main():
     
     w = train_online_delta_rule(x_train, y_train, mean, variance)
     
-    if f_type == "sin2x": y_predicted = predict(x_test, y_test, mean, variance, w.T)
-    else: y_predicted = predict_square(x_test, y_test, mean, variance, w.T)
+    if f_type == "sin2x": y_predicted = predict(x_test, y_test, mean, variance, w)
+    else: y_predicted = predict_square(x_test, y_test, mean, variance, w)
     
     mean_square_error = mse(y_test, y_predicted)
     # print("The MSE is: {}".format(MSE))
     mean_absolute_error = mae(y_test, y_predicted)
-    # print("The mean absolute error is: {}".format(MAE))
+    # print("The absolute residual error is: {}".format(MAE))
     
     plt.plot(x_train, y_train, label='real output')
     plt.plot(x_test, y_predicted, 'r--', label='prediction')
