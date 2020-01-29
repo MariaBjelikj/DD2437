@@ -105,7 +105,7 @@ def predict_square(x, y, mean, variance, w):
 def main():
     #  3.1: Training in Batch  #
     error_thresholds = [0.1, 0.01, 0.001]
-    f_type = "sin2x"
+    f_type = "square"
     x_train, y_train, x_test, y_test = generate_data(f_type, False)
     y_predicted = 0
     rbf_nodes = 20
