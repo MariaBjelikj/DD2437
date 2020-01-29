@@ -117,7 +117,7 @@ def main():
         w = train_batch(x_train, y_train, mean, variance)
 
         if f_type == "sin2x":
-            y_predicted = predict(x_test, y_test, mean, variance, w)
+            y_predicted = predict(x_test, mean, variance, w)
         else:
             y_predicted = predict_square(x_test, y_test, mean, variance, w)
 
