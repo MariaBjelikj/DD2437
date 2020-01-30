@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 ETA = 0.2
 EPOCH = 20
@@ -147,6 +148,15 @@ def cities_sorting(weight, cities):
     return data
 
 
+def connectpoints(x, y, p1, p2, i):
+    x1, x2 = x[p1], x[p2]
+    y1, y2 = y[p1], y[p2]
+    x_mean = min(x1, x2) + (max(x1, x2) - min(x1, x2)) / 2
+    y_mean = min(y1, y2) + (max(y1, y2) - min(y1, y2)) / 2
+    plt.plot([x1, x2], [y1, y2], 'k-', c=np.random.rand(3,))
+    plt.annotate(str(i), xy=(x_mean, y_mean))
+
+
 def task4_1(filename, weight, task):
     animal_names, animals_dat, animals_att = read_data(filename)
     weight_updated = som_algorithm(weight, animal_names, animals_dat, task)
@@ -162,4 +172,18 @@ def task4_2(filename, weight, task):
     cities[:, 1] = [float(i) for i in cities[:, 1]]
     weight_updated = som_task4_2(weight, cities, task)
     sorted_cities = cities_sorting(weight_updated, cities)
-    print(sorted_cities)
+    sorted_cities = sorted_cities.to_numpy()
+    data = data.to_numpy()
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    data[:, 0] = [float(i) for i in data[:, 0]]
+    data[:, 1] = [float(i) for i in data[:, 1]]
+    plt.plot(data[:, 0], data[:, 1], 'ro')
+    for i in range(data.shape[0]):
+        ax.annotate("City" + str(i + 1), (data[i, 0], data[i, 1]))
+    for i in range(sorted_cities.shape[0] - 1):
+        connectpoints(data[:, 0], data[:, 1], sorted_cities[i, 0] - 1, sorted_cities[i + 1, 0] - 1, i + 1)
+    plt.xlabel("$X_{axis}$")
+    plt.ylabel("$Y_{axis}$")
+    plt.title("Path across cities")
+    plt.show()
