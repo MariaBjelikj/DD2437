@@ -89,7 +89,7 @@ def neighborhood(winner_position, length, neighbor_distance, task):
         for i in range(negative_index, positive_index):
             neighbors.append([0, i])
     elif task == "task4_2":
-        negative_index_row, positive_index_row = get_indeces_2dim(winner_position, neighbor_distance)
+        negative_index_row, positive_index_row = get_indeces_circular(winner_position, neighbor_distance)
         for i in range(negative_index_row, positive_index_row + 1):
             # for j in range(negative_index_col, positive_index_col):
             neighbors.append([0, i])
@@ -228,5 +228,8 @@ def task4_3(filename, weight, task):
     votes = pd.read_csv(filename[0], header=None)
     sex = pd.read_csv(filename[1], header=None)
     party = pd.read_csv(filename[2], header=None)
-    names = pd.read_csv(filename[3], header=None, encoding='utf_8')
+    names = pd.read_csv(filename[3], header=None, encoding='iso-8859-1')  # Special encoding Swedish names
     district = pd.read_csv(filename[4], header=None)
+    frames = [sex, party, names, district]  # Defining the frames
+    data = pd.concat(frames, axis=1)  # Generating Panda's DataFrame
+    data = data.to_numpy()
