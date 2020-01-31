@@ -6,6 +6,7 @@ ETA = 0.2
 EPOCH = 20
 NEIGHBOR_DISTANCE_ANIMAL = 25
 NEIGHBOR_DISTANCE_CYCLING = 2
+NEIGHBOR_DISTANCE_POLITICS = 5
 
 """
 ##############################################################################
@@ -74,13 +75,6 @@ def get_indeces_circular(winner_position, neighbor_distance):
     return negative_index, positive_index
 
 
-def get_indeces_2dim(winner_position, neighbor_distance):
-    pos = winner_position
-    negative_index_row, positive_index_row = get_indeces_circular(pos, neighbor_distance)
-
-    return negative_index_row, positive_index_row
-
-
 def neighborhood(winner_position, length, neighbor_distance, task):
     neighbors = list()
 
@@ -95,6 +89,13 @@ def neighborhood(winner_position, length, neighbor_distance, task):
             neighbors.append([0, i])
         for i in range(len(neighbors)):
             neighbors[i][1] = neighbors[i][1] % length
+    elif task == "task4_3":
+        negative_index_row, positive_index_row, negative_index_col, positive_index_col = \
+            get_indeces_2dim(winner_position, neighbor_distance, length)
+        for i in range(negative_index_row, positive_index_row):
+            for j in range(negative_index_col, positive_index_col):
+                neighbors.append([i, j])
+        neighbors = np.array(neighbors)
     else:
         print("Error: No task match!")
         return
@@ -102,9 +103,14 @@ def neighborhood(winner_position, length, neighbor_distance, task):
     return neighbors
 
 
-def weight_update(neighbors, x, weight):
-    for i in range(len(neighbors)):
-        weight[neighbors[i][1]] = weight[neighbors[i][1]] + ETA * (x - weight[neighbors[i][1]])
+def weight_update(neighbors, x, weight, task):
+    if task != "task4_3":
+        for i in range(len(neighbors)):
+            weight[neighbors[i, 1]] = weight[neighbors[i, 1]] + ETA * (x - weight[neighbors[i, 1]])
+    else:
+        for i in range(neighbors.shape[0]):
+            for j in range(neighbors.shape[1]):
+                weight[neighbors[i, j]] = weight[neighbors[i, j]] + ETA * (x - weight[neighbors[i, j]])
 
     return weight
 
@@ -117,12 +123,14 @@ def som_algorithm(weight, data, task):
         real_distance = NEIGHBOR_DISTANCE_ANIMAL
     elif task == "task4_2":
         neighbor_distance = NEIGHBOR_DISTANCE_CYCLING
+    elif task == "task4_3":
+        neighbor_distance = NEIGHBOR_DISTANCE_POLITICS
 
     for i in range(EPOCH):
         for j in range(data.shape[0]):
             win_pos = similarity(data[j, :], weight)
             neighbors = neighborhood(win_pos, weight.shape[0], neighbor_distance, task)
-            weight = weight_update(neighbors, data[j, :], weight)
+            weight = weight_update(neighbors, data[j, :], weight, task)
         if task == "task4_1":
             real_distance -= (NEIGHBOR_DISTANCE_ANIMAL - 1) / EPOCH  # This is the real distance without roundning (
             # always updates)
@@ -224,6 +232,30 @@ def task4_2(filename, weight, task):
 """
 
 
+def manhattan(x, weight):
+    distance_aux = np.inf
+    winner_position = [0, 0]
+
+    for i in range(weight.shape[0]):
+        for j in range(weight.shape[1]):
+            diff = abs(x - weight[i, j, :])
+            distance = np.dot(np.transpose(diff), diff)  #
+            if distance < distance_aux:
+                distance_aux = distance
+                winner_position = [i, j]
+
+    return winner_position
+
+
+def get_indeces_2dim(winner_position, neighbor_distance, length):
+    negative_index_row = max(0, winner_position[0] - neighbor_distance)
+    positive_index_row = min(length, winner_position[0] + neighbor_distance)
+    negative_index_col = max(0, winner_position[1] - neighbor_distance)
+    positive_index_col = min(length, winner_position[1] + neighbor_distance)
+
+    return negative_index_row, positive_index_row, negative_index_col, positive_index_col
+
+
 def task4_3(filename, weight, task):
     votes = pd.read_csv(filename[0], header=None)
     sex = pd.read_csv(filename[1], header=None)
@@ -233,3 +265,15 @@ def task4_3(filename, weight, task):
     frames = [sex, party, names, district]  # Defining the frames
     data = pd.concat(frames, axis=1)  # Generating Panda's DataFrame
     data = data.to_numpy()
+    votes = np.array(votes).reshape(349, 31)
+
+    neighbor_distance = NEIGHBOR_DISTANCE_POLITICS
+    for i in range(EPOCH):
+        for j in range(votes.shape[0]):
+            win_pos = manhattan(votes[j, :], weight)
+            neighbors = neighborhood(win_pos, weight.shape[0], neighbor_distance, task)
+            weight = weight_update(neighbors, votes[j, :], weight, task)
+
+
+    print(weight)
+
