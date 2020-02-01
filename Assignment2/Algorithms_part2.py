@@ -1,11 +1,22 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import cm
+import sys
+from enum import Enum
+
+
+class Attribute(Enum):
+    Sex = 0  # Sex attribute for politicians
+    Party = 1  # Party attribute for politicians
+    District = 3  # District attribute for politicians
+
 
 ETA = 0.2
 EPOCH = 20
 NEIGHBOR_DISTANCE_ANIMAL = 25
 NEIGHBOR_DISTANCE_CYCLING = 2
+NEIGHBOR_DISTANCE_POLITICS = 5
 
 """
 ##############################################################################
@@ -26,7 +37,7 @@ def read_data(filename, task):
 
         return animal_names, animals_dat, animals_att
 
-    if task == "task4_2":
+    elif task == "task4_2":
         data = pd.read_csv(filename[0], header=None)
         data[1].replace(regex=True, inplace=True, to_replace=r';', value=r'')
         cities = data.to_numpy()
@@ -34,6 +45,10 @@ def read_data(filename, task):
         cities[:, 1] = [float(i) for i in cities[:, 1]]
 
         return cities, data
+
+    else:
+        print("Error: No task match!")
+        sys.exit()
 
 
 def clean_names(names):
@@ -74,13 +89,6 @@ def get_indeces_circular(winner_position, neighbor_distance):
     return negative_index, positive_index
 
 
-def get_indeces_2dim(winner_position, neighbor_distance):
-    pos = winner_position
-    negative_index_row, positive_index_row = get_indeces_circular(pos, neighbor_distance)
-
-    return negative_index_row, positive_index_row
-
-
 def neighborhood(winner_position, length, neighbor_distance, task):
     neighbors = list()
 
@@ -95,34 +103,48 @@ def neighborhood(winner_position, length, neighbor_distance, task):
             neighbors.append([0, i])
         for i in range(len(neighbors)):
             neighbors[i][1] = neighbors[i][1] % length
+    elif task == "task4_3":
+        negative_index_row, positive_index_row, negative_index_col, positive_index_col = \
+            get_indeces_2dim(winner_position, neighbor_distance, length)
+        for i in range(negative_index_row, positive_index_row):
+            for j in range(negative_index_col, positive_index_col):
+                neighbors.append([i, j])
+        neighbors = np.array(neighbors)
     else:
         print("Error: No task match!")
-        return
+        sys.exit()
 
     return neighbors
 
 
-def weight_update(neighbors, x, weight):
-    for i in range(len(neighbors)):
-        weight[neighbors[i][1]] = weight[neighbors[i][1]] + ETA * (x - weight[neighbors[i][1]])
+def weight_update(neighbors, x, weight, task):
+    if task != "task4_3":
+        for i in range(len(neighbors)):
+            weight[neighbors[i][1]] = weight[neighbors[i][1]] + ETA * (x - weight[neighbors[i][1]])
+    else:
+        for i in range(neighbors.shape[0]):
+            weight[neighbors[i][0], neighbors[i][1]] = weight[neighbors[i][0], neighbors[i][1]] \
+                                                       + ETA * (x - weight[neighbors[i][0], neighbors[i][1]])
 
     return weight
 
 
 def som_algorithm(weight, data, task):
     real_distance = 0
-    neighbor_distance = 0
     if task == "task4_1":
         neighbor_distance = NEIGHBOR_DISTANCE_ANIMAL
         real_distance = NEIGHBOR_DISTANCE_ANIMAL
     elif task == "task4_2":
         neighbor_distance = NEIGHBOR_DISTANCE_CYCLING
+    else:
+        print("Error: No task match!")
+        sys.exit()
 
     for i in range(EPOCH):
         for j in range(data.shape[0]):
             win_pos = similarity(data[j, :], weight)
             neighbors = neighborhood(win_pos, weight.shape[0], neighbor_distance, task)
-            weight = weight_update(neighbors, data[j, :], weight)
+            weight = weight_update(neighbors, data[j, :], weight, task)
         if task == "task4_1":
             real_distance -= (NEIGHBOR_DISTANCE_ANIMAL - 1) / EPOCH  # This is the real distance without roundning (
             # always updates)
@@ -145,14 +167,14 @@ def sorting(weight, data, task, names=None):
         best_combination.append(win_pos)
 
     if task == "task4_1":
-        data = {'Animal': names, 'WeightIndex': best_combination}  # Generate data structure
-    elif task == "task4_2":
-        data = {'City': range(1, data.shape[0] + 1), 'WeightIndex': best_combination}
+        df = {'Animal': names, 'WeightIndex': best_combination}  # Generate data structure
+    else:
+        df = {'City': range(1, data.shape[0] + 1), 'WeightIndex': best_combination}
 
-    data = pd.DataFrame(data=data)  # Generating Panda's DataFrame
-    data = data.sort_values(by='WeightIndex')  # Sorting DataFrame by values of the best position ['col2']
+    df = pd.DataFrame(data=df)  # Generating Panda's DataFrame
+    df = df.sort_values(by='WeightIndex')  # Sorting DataFrame by values of the best position ['col2']
 
-    return data
+    return df
 
 
 """
@@ -224,6 +246,43 @@ def task4_2(filename, weight, task):
 """
 
 
+def manhattan(x, weight):
+    distance_aux = np.inf
+    winner_position = [0, 0]
+
+    for i in range(weight.shape[0]):
+        for j in range(weight.shape[1]):
+            diff = abs(x - weight[i, j, :])
+            distance = np.dot(np.transpose(diff), diff)
+            if distance < distance_aux:
+                distance_aux = distance
+                winner_position = [i, j]
+
+    return winner_position
+
+
+def get_indeces_2dim(winner_position, neighbor_distance, length):
+    negative_index_row = max(0, winner_position[0] - neighbor_distance)
+    positive_index_row = min(length, winner_position[0] + neighbor_distance)
+    negative_index_col = max(0, winner_position[1] - neighbor_distance)
+    positive_index_col = min(length, winner_position[1] + neighbor_distance)
+
+    return negative_index_row, positive_index_row, negative_index_col, positive_index_col
+
+
+def sorting_task3(weight, votes, data, attribute):
+    best_combiniation = list()
+    for i in range(votes.shape[0]):
+        best_combiniation.append(manhattan(votes[i, :], weight))
+    for i in range(len(best_combiniation)):
+        best_combiniation[i] = best_combiniation[i][0] * weight.shape[0] + best_combiniation[i][1]
+    df = {'Attributes': data[:, attribute], 'WeightIndex': best_combiniation}
+    df = pd.DataFrame(data=df)  # Generating Panda's DataFrame
+    # df = df.sort_values(by='WeightIndex')  # Sorting DataFrame by values of the best position ['col2']
+
+    return df
+
+
 def task4_3(filename, weight, task):
     votes = pd.read_csv(filename[0], header=None)
     sex = pd.read_csv(filename[1], header=None)
@@ -233,3 +292,45 @@ def task4_3(filename, weight, task):
     frames = [sex, party, names, district]  # Defining the frames
     data = pd.concat(frames, axis=1)  # Generating Panda's DataFrame
     data = data.to_numpy()
+    votes = np.array(votes).reshape(349, 31)
+
+    neighbor_distance = NEIGHBOR_DISTANCE_POLITICS
+    # real_distance = NEIGHBOR_DISTANCE_POLITICS
+    for i in range(EPOCH):
+        for j in range(votes.shape[0]):
+            win_pos = manhattan(votes[j, :], weight)
+            neighbors = neighborhood(win_pos, weight.shape[0], neighbor_distance, task)
+            weight = weight_update(neighbors, votes[j, :], weight, task)
+        # real_distance -= (NEIGHBOR_DISTANCE_POLITICS - 1) / EPOCH  # This is the real distance without roundning (
+        # always updates)
+        # neighbor_distance = round(real_distance)  # Rounding the real distance for iterationss
+
+    # Sorting by different attributes
+    for attribute in Attribute:
+        unique_data_attributes = np.unique(data[:, attribute.value])
+        dictionary = {}
+        for i, k in enumerate(unique_data_attributes):
+            dictionary[k] = i
+        sorted_politics = sorting_task3(weight, votes, data, attribute.value)
+        sorted_politics = sorted_politics.to_numpy()
+        grid = np.zeros((weight.shape[0], weight.shape[0], len(unique_data_attributes)))
+        for i in range(sorted_politics.shape[0]):
+            x = int(sorted_politics[i][1] / weight.shape[0])
+            y = sorted_politics[i][1] % weight.shape[0]
+            grid[x, y, dictionary[sorted_politics[i][0]]] += 1
+
+        final_grid = -np.ones((weight.shape[0], weight.shape[0]))
+        for i in range(grid.shape[0]):
+            for j in range(grid.shape[1]):
+                maximum = grid[i, j, 0]
+                maxpos = 0
+                for k in range(grid.shape[2] - 1):
+                    if maximum < grid[i, j, k + 1]:
+                        maximum = grid[i, j, k + 1]
+                        maxpos = k + 1
+                if maximum != 0:
+                    final_grid[i, j] = maxpos
+        img = plt.imshow(final_grid.T, origin='lower')
+        plt.colorbar(img, ticks=np.linspace(-1, len(unique_data_attributes), len(unique_data_attributes) + 2))
+        plt.title("Politicians classified by " + attribute.name)
+        plt.show()
