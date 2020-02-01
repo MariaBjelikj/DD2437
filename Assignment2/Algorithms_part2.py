@@ -6,15 +6,13 @@ from enum import Enum
 
 
 class Attribute(Enum):
-    SEX = 0  # Sex attribute for politicians
-    PARTY = 1  # Party attribute for politicians
-    NAME = 2  # Name attribute for politicians
-    DISTRICT = 3  # District attribute for politicians
+    Sex = 0  # Sex attribute for politicians
+    Party = 1  # Party attribute for politicians
+    District = 3  # District attribute for politicians
 
 
 ETA = 0.2
 EPOCH = 20
-ATTRIBUTE = 2
 NEIGHBOR_DISTANCE_ANIMAL = 25
 NEIGHBOR_DISTANCE_CYCLING = 2
 NEIGHBOR_DISTANCE_POLITICS = 5
@@ -132,7 +130,6 @@ def weight_update(neighbors, x, weight, task):
 
 def som_algorithm(weight, data, task):
     real_distance = 0
-    neighbor_distance = 0
     if task == "task4_1":
         neighbor_distance = NEIGHBOR_DISTANCE_ANIMAL
         real_distance = NEIGHBOR_DISTANCE_ANIMAL
@@ -280,7 +277,7 @@ def sorting_task3(weight, votes, data, attribute):
         best_combiniation[i] = best_combiniation[i][0] * weight.shape[0] + best_combiniation[i][1]
     df = {'Attributes': data[:, attribute], 'WeightIndex': best_combiniation}
     df = pd.DataFrame(data=df)  # Generating Panda's DataFrame
-    df = df.sort_values(by='WeightIndex')  # Sorting DataFrame by values of the best position ['col2']
+    # df = df.sort_values(by='WeightIndex')  # Sorting DataFrame by values of the best position ['col2']
 
     return df
 
@@ -297,32 +294,28 @@ def task4_3(filename, weight, task):
     votes = np.array(votes).reshape(349, 31)
 
     neighbor_distance = NEIGHBOR_DISTANCE_POLITICS
-    real_distance = NEIGHBOR_DISTANCE_POLITICS
+    # real_distance = NEIGHBOR_DISTANCE_POLITICS
     for i in range(EPOCH):
         for j in range(votes.shape[0]):
             win_pos = manhattan(votes[j, :], weight)
             neighbors = neighborhood(win_pos, weight.shape[0], neighbor_distance, task)
             weight = weight_update(neighbors, votes[j, :], weight, task)
-        real_distance -= (NEIGHBOR_DISTANCE_POLITICS - 1) / EPOCH  # This is the real distance without roundning (
+        # real_distance -= (NEIGHBOR_DISTANCE_POLITICS - 1) / EPOCH  # This is the real distance without roundning (
         # always updates)
-        neighbor_distance = round(real_distance)  # Rounding the real distance for iterationss
+        # neighbor_distance = round(real_distance)  # Rounding the real distance for iterationss
+
     # Sorting by different attributes
     for attribute in Attribute:
+        unique_data_attributes = np.unique(data[:, attribute.value])
+        dictionary = {}
+        for i, k in enumerate(unique_data_attributes):
+            dictionary[k] = i
+        colors = np.random.rand(len(unique_data_attributes), 3)
         sorted_politics = sorting_task3(weight, votes, data, attribute.value)
         sorted_politics = sorted_politics.to_numpy()
-        sorted_x = list()
-        sorted_y = list()
-        prev, curr = sorted_politics[0][1], sorted_politics[0][1]
         for i in range(sorted_politics.shape[0]):
-            curr = sorted_politics[i][1]
-            sorted_x.append(int(sorted_politics[i][1] / weight.shape[0]) + np.random.normal(0, 0.1))  # Small noise to
-            # define cluster
-            sorted_y.append(sorted_politics[i][1] % weight.shape[0] + np.random.normal(0, 0.1))  # Small noise to define
-            # cluster
-            if curr != prev:
-                plt.scatter(sorted_x, sorted_y)
-                sorted_x = list()
-                sorted_y = list()
-            prev = curr
+            x = int(sorted_politics[i][1] / weight.shape[0])  # + np.random.normal(0, 0.1)  # Small noise to define cluster
+            y = sorted_politics[i][1] % weight.shape[0]  # + np.random.normal(0, 0.1)  # Small noise to define cluster
+            plt.scatter(x, y, c=[colors[dictionary[sorted_politics[i][0]]]])
         plt.title("Politicians classified by " + attribute.name)
         plt.show()
