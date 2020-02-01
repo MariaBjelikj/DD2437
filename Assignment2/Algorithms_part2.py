@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import sys
 from enum import Enum
 
@@ -310,12 +311,26 @@ def task4_3(filename, weight, task):
         dictionary = {}
         for i, k in enumerate(unique_data_attributes):
             dictionary[k] = i
-        colors = np.random.rand(len(unique_data_attributes), 3)
         sorted_politics = sorting_task3(weight, votes, data, attribute.value)
         sorted_politics = sorted_politics.to_numpy()
+        grid = np.zeros((weight.shape[0], weight.shape[0], len(unique_data_attributes)))
         for i in range(sorted_politics.shape[0]):
-            x = int(sorted_politics[i][1] / weight.shape[0])  # + np.random.normal(0, 0.1)  # Small noise to define cluster
-            y = sorted_politics[i][1] % weight.shape[0]  # + np.random.normal(0, 0.1)  # Small noise to define cluster
-            plt.scatter(x, y, c=[colors[dictionary[sorted_politics[i][0]]]])
+            x = int(sorted_politics[i][1] / weight.shape[0])
+            y = sorted_politics[i][1] % weight.shape[0]
+            grid[x, y, dictionary[sorted_politics[i][0]]] += 1
+
+        final_grid = -np.ones((weight.shape[0], weight.shape[0]))
+        for i in range(grid.shape[0]):
+            for j in range(grid.shape[1]):
+                maximum = grid[i, j, 0]
+                maxpos = 0
+                for k in range(grid.shape[2] - 1):
+                    if maximum < grid[i, j, k + 1]:
+                        maximum = grid[i, j, k + 1]
+                        maxpos = k + 1
+                if maximum != 0:
+                    final_grid[i, j] = maxpos
+        img = plt.imshow(final_grid.T, origin='lower')
+        plt.colorbar(img, ticks=np.linspace(-1, len(unique_data_attributes), len(unique_data_attributes) + 2))
         plt.title("Politicians classified by " + attribute.name)
         plt.show()
