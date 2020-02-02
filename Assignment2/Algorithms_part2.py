@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib import cm
+from random import randint
 import sys
 from enum import Enum
 
@@ -21,7 +21,7 @@ NEIGHBOR_DISTANCE_POLITICS = 5
 """
 ##############################################################################
 # Functions for both tasks
-###############################################################################
+##############################################################################
 """
 
 
@@ -180,7 +180,7 @@ def sorting(weight, data, task, names=None):
 """
 ##############################################################################
 # Task 1
-###############################################################################
+##############################################################################
 """
 
 
@@ -194,7 +194,7 @@ def task4_1(filename, weight, task):
 """
 ##############################################################################
 # Task 2
-###############################################################################
+##############################################################################
 """
 
 
@@ -242,7 +242,7 @@ def task4_2(filename, weight, task):
 """
 ##############################################################################
 # Task 3
-###############################################################################
+##############################################################################
 """
 
 
@@ -278,7 +278,6 @@ def sorting_task3(weight, votes, data, attribute):
         best_combiniation[i] = best_combiniation[i][0] * weight.shape[0] + best_combiniation[i][1]
     df = {'Attributes': data[:, attribute], 'WeightIndex': best_combiniation}
     df = pd.DataFrame(data=df)  # Generating Panda's DataFrame
-    # df = df.sort_values(by='WeightIndex')  # Sorting DataFrame by values of the best position ['col2']
 
     return df
 
@@ -293,17 +292,17 @@ def task4_3(filename, weight, task):
     data = pd.concat(frames, axis=1)  # Generating Panda's DataFrame
     data = data.to_numpy()
     votes = np.array(votes).reshape(349, 31)
-
     neighbor_distance = NEIGHBOR_DISTANCE_POLITICS
-    # real_distance = NEIGHBOR_DISTANCE_POLITICS
+    real_distance = NEIGHBOR_DISTANCE_POLITICS
+
     for i in range(EPOCH):
         for j in range(votes.shape[0]):
             win_pos = manhattan(votes[j, :], weight)
             neighbors = neighborhood(win_pos, weight.shape[0], neighbor_distance, task)
             weight = weight_update(neighbors, votes[j, :], weight, task)
-        # real_distance -= (NEIGHBOR_DISTANCE_POLITICS - 1) / EPOCH  # This is the real distance without roundning (
+        real_distance -= (NEIGHBOR_DISTANCE_POLITICS - 1) / EPOCH  # This is the real distance without roundning (
         # always updates)
-        # neighbor_distance = round(real_distance)  # Rounding the real distance for iterationss
+        neighbor_distance = round(real_distance)  # Rounding the real distance for iterations
 
     # Sorting by different attributes
     for attribute in Attribute:
@@ -319,6 +318,7 @@ def task4_3(filename, weight, task):
             y = sorted_politics[i][1] % weight.shape[0]
             grid[x, y, dictionary[sorted_politics[i][0]]] += 1
 
+        # Getting the maximum attribute per position
         final_grid = -np.ones((weight.shape[0], weight.shape[0]))
         for i in range(grid.shape[0]):
             for j in range(grid.shape[1]):
@@ -330,7 +330,22 @@ def task4_3(filename, weight, task):
                         maxpos = k + 1
                 if maximum != 0:
                     final_grid[i, j] = maxpos
-        img = plt.imshow(final_grid.T, origin='lower')
-        plt.colorbar(img, ticks=np.linspace(-1, len(unique_data_attributes), len(unique_data_attributes) + 2))
+
+        # Creation of the array of colors
+        colors = []
+        for i in range(len(unique_data_attributes)):
+            colors.append('#%06X' % randint(0, 0xFFFFFF))
+
+        # Plotting each maximum attribute not null
+        for i in range(final_grid.shape[0]):
+            for j in range(final_grid.shape[1]):
+                if final_grid[i, j] != -1:
+                    plt.scatter(i, j, s=100, color=colors[int(final_grid[i, j])])
         plt.title("Politicians classified by " + attribute.name)
+        ax = plt.gca()
+        ax.set_xticks(np.arange(-0.5, weight.shape[0], 1))
+        ax.set_yticks(np.arange(-0.5, weight.shape[1], 1))
+        ax.set_xticklabels(np.arange(0, weight.shape[0] + 1, 1))
+        ax.set_yticklabels(np.arange(0, weight.shape[0] + 1, 1))
+        plt.grid()
         plt.show()
