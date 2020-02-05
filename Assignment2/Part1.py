@@ -72,8 +72,8 @@ def train_online_delta_rule(x, y, mean, variance):
     w = np.random.rand(1, phi.shape[1])  # random initialisation for weights
 
     # for ETA in ETA_list:
-    MSE = []
-    MAE = []
+    mse_list = []
+    mae_list = []
     for epoch in range(EPOCHS):
         for i in range(phi.shape[0]):
             phi_i = np.reshape(phi[i], (1, len(phi[i])))  # just to avoid dimension error
@@ -83,12 +83,12 @@ def train_online_delta_rule(x, y, mean, variance):
 
         y_predicted = np.dot(phi, w.T)
 
-        MSE_ = mse(y, y_predicted)
-        MAE_ = mae(y, y_predicted)
+        mse_val = mse(y, y_predicted)
+        mae_val = mae(y, y_predicted)
 
         if epoch > 1:
-            MSE.append(MSE_)
-            MAE.append(MAE_)
+            mse_list.append(mse_val)
+            mae_list.append(mae_val)
 
         # plt.plot(range(2, EPOCHS), MAE, label=ETA)
 
@@ -107,7 +107,7 @@ def train_online_delta_rule(x, y, mean, variance):
     return w.T
 
 
-def predict(x, y, mean, variance, w):
+def predict(x, mean, variance, w):
     phi = phi_matrix(x, mean, variance)
 
     # The prediction is done multiplying RBF phi with the calculated weights w
@@ -125,9 +125,9 @@ def predict_square(x, y, mean, variance, w):
     return prediction
 
 
-def competitive_learning(x, y, x_test, y_test, variance, deadnode=False):
+def competitive_learning(x, deadnode=False):
     np.random.shuffle(x)  # Shuffle data for more random selection
-    RBF_nodes = x[[0, 3, 8, 15, 22, 29, 34, 37, 45, 52, 58, 62]]  # Select nodes from data
+    rbf_nodes = x[[0, 3, 8, 15, 22, 29, 34, 37, 45, 52, 58, 62]]  # Select nodes from data
     # the higher the number of RBF nodes here, the better the prediction
 
     # plt.scatter(RBF_nodes, np.zeros(len(RBF_nodes)), color='r', label="RBF nodes before")
@@ -136,7 +136,7 @@ def competitive_learning(x, y, x_test, y_test, variance, deadnode=False):
         train_vector = x[np.random.randint(0, len(x)), :]  # random vector for training
         distances = []
 
-        for node in RBF_nodes:
+        for node in rbf_nodes:
             # Calculate distance between training vector and RBF node
             distances.append(np.linalg.norm(node - train_vector))
 
@@ -145,12 +145,12 @@ def competitive_learning(x, y, x_test, y_test, variance, deadnode=False):
         index = np.argpartition(distances, 1)
 
         winner = np.argmin(index)  # get best node (smallest distance)
-        RBF_nodes[winner] += ETA * (train_vector - RBF_nodes[winner])
+        rbf_nodes[winner] += ETA * (train_vector - rbf_nodes[winner])
 
         if deadnode:
             # Update the worst node (largest distance) to avoid dead nodes
             loser = np.argmax(index)
-            RBF_nodes[loser] += ETA * ETA * (train_vector - RBF_nodes[loser])
+            rbf_nodes[loser] += ETA * ETA * (train_vector - rbf_nodes[loser])
             # NOTE: another option here is to select multiple winners!
 
     # plt.scatter(RBF_nodes, np.zeros(len(RBF_nodes)), color='b', label="RBF nodes after")
@@ -158,19 +158,18 @@ def competitive_learning(x, y, x_test, y_test, variance, deadnode=False):
     # plt.legend()
     # plt.show()
 
-    return RBF_nodes
+    return rbf_nodes
 
 
 def main():
-    ################### 3.1: Training in Batch ######################
+    # --------------- 3.1: Training in Batch --------------- #
     error_thresholds = [0.1, 0.01, 0.001]
     f_type = "sin2x"
     x_train, y_train, x_test, y_test = generate_data(f_type, True)
-    x_train_clean, y_train_clean, x_test_clean, y_test_clean = generate_data(f_type, False)
     y_predicted = 0
     rbf_nodes = 19
 
-    variance_list = [0.1, 0.5, 0.8, 1.2, 1.5]
+    # variance_list = [0.1, 0.5, 0.8, 1.2, 1.5]
 
     # Test error thresholds for various numbers of RBF nodes
     # for variance in variance_list:
@@ -181,13 +180,13 @@ def main():
         w = train_batch(x_train, y_train, mean, variance)
 
         if f_type == "sin2x":
-            y_predicted = predict(x_test, y_test, mean, variance, w)
+            y_predicted = predict(x_test, mean, variance, w)
         else:
             y_predicted = predict_square(x_test, y_test, mean, variance, w)
         # y_predicted = predict(x_test, y_test, mean, variance, w)
         # y_predicted = predict(x_test_clean, y_test_clean, mean, variance, w)
 
-        mean_square_error = mse(y_test, y_predicted)
+        # mean_square_error = mse(y_test, y_predicted)
         # print("The MSE is: {}".format(mean_square_error))
         mean_absolute_error = mae(y_test, y_predicted)
         # print("The absolute residual error is {} for {} nodes".format(mean_absolute_error, i))
@@ -215,7 +214,7 @@ def main():
     plt.legend()
     plt.show()
 
-    ################### 3.2: Online Delta Rule #######################
+    # --------------- 3.2: Online Delta Rule --------------- #
     f_type = "sin2x"
     x_train, y_train, x_test, y_test = generate_data(f_type, True)
     x_train_clean, y_train_clean, x_test_clean, y_test_clean = generate_data(f_type, False)
@@ -233,12 +232,12 @@ def main():
         # if f_type == "sin2x": y_predicted = predict(x_test, y_test, mean, variance, w)
         # else: y_predicted = predict_square(x_test, y_test, mean, variance, w)
         # y_predicted = predict(x_test, y_test, mean, variance, w)
-        y_predicted = predict(x_test_clean, y_test_clean, mean, variance, w)
+        y_predicted = predict(x_test_clean, mean, variance, w)
 
-        mean_square_error = mse(y_test, y_predicted)
+        # mean_square_error = mse(y_test, y_predicted)
         # print("The MSE is: {}".format(MSE))
         # mean_absolute_error = mae(y_test, y_predicted)
-        mean_absolute_error = mae(y_test_clean, y_predicted)
+        # mean_absolute_error = mae(y_test_clean, y_predicted)
         # print("The absolute residual error is {} for {} nodes".format(mean_absolute_error, i))
 
         # MAE.append(mean_absolute_error)
@@ -249,7 +248,8 @@ def main():
     # plt.legend()
     # plt.xlabel("Number of RBF nodes")
     # plt.ylabel("MAE")
-    # plt.title("Online Delta: Absolute residual error vs. number of nodes \n for different RBF widths given in legend.")
+    # plt.title("Online Delta: Absolute residual error vs. number of nodes
+    # \n for different RBF widths given in legend.")
     # plt.show()
 
     plt.plot(x_train, y_train, label='real output')
@@ -258,26 +258,26 @@ def main():
     plt.legend()
     plt.show()
 
-    ################### Single Hidden Layer Perceptron ##################
+    # --------------- Single Hidden Layer Perceptron --------------- #
 
-    ################### 3.3: Competitive Learning #######################
+    # --------------- 3.3: Competitive Learning --------------- #
 
-    ################### Training in Batch ######################
+    # --------------- Training in Batch --------------- #
     f_type = "sin2x"
     x_train, y_train, x_test, y_test = generate_data(f_type, True)
-    y_predicted = 0
+    # y_predicted = 0
     variance = 0.5
-    RBF_nodes = competitive_learning(x_train.copy(), y_train, x_test, y_test, variance)
+    rbf_nodes = competitive_learning(x_train.copy())
 
-    mean = RBF_nodes
+    mean = rbf_nodes
     w = train_batch(x_train, y_train, mean, variance)
 
     # if f_type == "sin2x": y_predicted = predict(x_test, y_test, mean, variance, w)
     # else: y_predicted = predict_square(x_test, y_test, mean, variance, w)
-    y_predicted = predict(x_test, y_test, mean, variance, w)
+    y_predicted = predict(x_test, mean, variance, w)
     # y_predicted = predict(x_test_clean, y_test_clean, mean, variance, w)
 
-    mean_square_error = mse(y_test, y_predicted)
+    # mean_square_error = mse(y_test, y_predicted)
     # print("The MSE is: {}".format(mean_square_error))
     mean_absolute_error = mae(y_test, y_predicted)
     print("The absolute residual error is {}".format(mean_absolute_error))
@@ -288,18 +288,18 @@ def main():
     plt.legend()
     plt.show()
 
-    ################### Ballist data ######################
+    # --------------- Ballist data --------------- #
     f_type = "ballist"
     x_train, y_train, x_test, y_test = generate_data(f_type, True)
-    y_predicted = 0
+    # y_predicted = 0
     variance = 0.9
-    RBF_nodes = competitive_learning(x_train.copy(), y_train, x_test, y_test, variance)
-    print(RBF_nodes)
+    rbf_nodes = competitive_learning(x_train.copy())
+    print(rbf_nodes)
 
     # Train the RBF network in batch mode
-    mean = RBF_nodes
+    mean = rbf_nodes
     w = train_batch(x_train, y_train, mean, variance)
-    y_predicted = predict(x_test, y_test, mean, variance, w)
+    y_predicted = predict(x_test, mean, variance, w)
 
     mean_absolute_error = mae(y_test, y_predicted)
     print("The absolute residual error is {}".format(mean_absolute_error))
