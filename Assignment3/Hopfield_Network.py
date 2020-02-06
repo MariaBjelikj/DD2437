@@ -45,7 +45,7 @@ def weights(x):
 
     return w
 
-def update_syncroniously(x, w):
+def update_syncronously(x, w):
     # Update the weights synchroniously
     # aka "Little Model"
     x_current = np.copy(x)
@@ -65,7 +65,7 @@ def update_syncroniously(x, w):
         
     return x_current
 
-def update_asyncroniously(x, w):
+def update_asyncronously(x, w):
     # Update the weights synchroniously
     # aka "Little Model"
     x_current = np.copy(x)
