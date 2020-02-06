@@ -5,15 +5,16 @@ ITERATIONS = 100  # number of iterations for syncronious update
 
 
 def set_sign(x, w, index):
+    x_aux = np.copy(x)
     for i in range(len(x[index, :])):
         aux = 0
         for j in range(len(x[index, :])):
-            aux += w[i, j] * x [index, j]
+            aux += w[i, j] * x_aux[index, j]
         if aux >= 0:
-            x[index, i] = 1
+            x_aux[index, i] = 1
         else:
-            x[index, i] = -1
-    return x[index, :]
+            x_aux[index, i] = -1
+    return x_aux[index, :]
 
 
 def generate_data(d_type):
@@ -69,14 +70,14 @@ def update_syncroniously(x, w):
     for _ in range(ITERATIONS):
         # x_new = np.sign(w @ x_current.T) # from 2.2 in lab
         for i in range(x.shape[0]):
-            x_new[i, :] = set_sign(x, w, i)
-            w = weights(x_new)
-        """
+            x_new[i, :] = set_sign(x_current, w, i)
+            # w = weights(x_new)
+
         if np.all(x_new == x_current):  # check recall
             print("The network converged after {} iterations.".format(_))
             break  # the state is stable (convergence, break loop)
-        """
-        x_current = x_new
+
+        x_current = np.copy(x_new)
         
     return x_current
 
