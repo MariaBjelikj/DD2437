@@ -58,7 +58,7 @@ def set_sign(x, w, index):
     return x_sign[index, :]
 
 
-def recall(x, w, update_type="synchronous"):
+def recall(x, w, update_type="synchronous", convergence_type=False):
     if update_type == "synchronous":
         # Update the weights synchronously, aka "Little Model"
         x_current = np.copy(x)
@@ -74,16 +74,23 @@ def recall(x, w, update_type="synchronous"):
                 x_new[i, :] = set_sign(x_current, w, i)
                 # Compute energy for this state
             
-            E_new = energy(x_new, w)
+            if convergence_type == "energy":
+                E_new = energy(x_new, w)
+                    
+                if E_new == E_current: # If the energy hasn't changed, converged
+                    convergence_count += 1
+                    
+                if convergence_count > 5:
+                    print("The network converged after {} iterations.".format(iteration))
+                    break
+                    
+                E_current = np.copy(E_new)
+            
+            else: 
+                if np.all(x_new == x_current.T):  # check recall
+                    print("The network converged after {} iterations.".format(iteration))
+                    break  # the state is stable (convergence, break loop)
                 
-            if E_new == E_current: # If the energy hasn't changed, converged
-                convergence_count += 1
-                
-            if convergence_count > 5:
-                print("The network converged after {} iterations.".format(iteration))
-                break
-                
-            E_current = np.copy(E_new)
             x_current = np.copy(x_new)
     
     if update_type == "asynchronous":
@@ -102,24 +109,37 @@ def recall(x, w, update_type="synchronous"):
                     idx = np.random.randint(0, x.shape[1])
                     x_new[i, idx] = np.sign(x_current[i, :] @ w[idx])
                     
-            E_new = energy(x_new, w)
-                
-            if E_new == E_current: # If the energy hasn't changed, converged
-                convergence_count += 1
-                
-            if convergence_count > 5:
-                print("The network converged after {} iterations.".format(iteration))
-                break
-                
-            E_current = np.copy(E_new)
-            x_current = np.copy(x_new)
+            if convergence_type == "energy":
+                E_new = energy(x_new, w)
+                    
+                if E_new == E_current: # If the energy hasn't changed, converged
+                    convergence_count += 1
+                    
+                if convergence_count > 5:
+                    print("The network converged after {} iterations.".format(iteration))
+                    break
+                    
+                E_current = np.copy(E_new)
     
-            """if np.all(x_new == x_current.T):  # check recall
-                print("The network converged after {} iterations.".format(iteration))
-                break  # the state is stable (convergence, break loop)"""
+            else:
+                if np.all(x_new == x_current.T):  # check recall
+                    print("The network converged after {} iterations.".format(iteration))
+                    break  # the state is stable (convergence, break loop)
+                    
+            x_current = np.copy(x_new)
                           
     return x_current
 
+def find_attractors(data, data_updated, w):
+    # Attractors are the patterns that don't change after weight update
+    attractors = []
+    
+    for i in range(data.shape[0]):
+        if np.all(data[i] == data_updated[i]):
+            attractors.append(data[i])
+    
+    return attractors
+        
 
 def energy(state, w):
     return np.sum(- 0.5 * state @ w @ state.T)
@@ -134,3 +154,4 @@ def display(image):
     
     
 # TODO: Add bias
+# Asynchronous update: Maybe we should change the order of how we update?
