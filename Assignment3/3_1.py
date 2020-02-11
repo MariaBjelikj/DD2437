@@ -18,7 +18,7 @@ print("\nOriginal data:\n", x)
 print("x updated distorted:\n", x_updated_distorted)
 print("x updated super distorted:\n", x_updated_super_distorted)
 
-attractors = find_attractors(x, x_updated_distorted, w)
+attractors = find_attractors(x, x_updated_distorted)
 print("The attractors are: ")
 print(attractors)
 

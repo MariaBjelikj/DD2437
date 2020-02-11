@@ -1,9 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from tqdm import tqdm
-from sklearn.utils import shuffle
+import random
 
-ITERATIONS = 1000  # number of iterations for syncronious update
+ITERATIONS = 800  # number of iterations for syncronious update
 
 
 def generate_data(d_type):
@@ -28,7 +27,7 @@ def generate_data(d_type):
         return np.vstack([x1d, x2d, x3d])
 
 
-def weights(x):
+def weights(x, weights_type=False, symmetrical=False):
     # Update weights for Little Model
     n = x.shape[0]  # number of patterns
     m = x.shape[1]  # number of neurons
@@ -41,6 +40,14 @@ def weights(x):
 
     for i in range(m):
         w[i, i] = 0  # fill diagonal with 0
+
+    if weights_type == "normal":
+        for i in range(m):
+            for j in range(m):
+                w[i][j] = random.normalvariate(0, 5)
+
+    if symmetrical:
+        w = 0.5 * (w + w.T)
 
     # w = w / M # normalize, only if bias is used
     return w
@@ -59,7 +66,20 @@ def set_sign(x, w, index):
     return x_sign[index, :]
 
 
-def check_convergence_energy(x_new, w, energy_old, convergence_count, iteration):
+def energy(state, w):
+    return np.sum(- state @ w @ state.T)
+
+
+def display(image, title=""):
+    # For task 3.2
+    # display images in shape (32, 32) and rotate them so face is up
+    plt.imshow(np.rot90(image.reshape(32, 32)), origin='lower', interpolation="nearest")
+    if title != "":
+        plt.title(title)
+    plt.show()
+
+
+def check_convergence_energy(x_new, w, energy_old, convergence_count):
     energy_new = energy(x_new, w)
     if energy_old == energy_new:  # If the energy hasn't changed, converged
         convergence_count += 1
@@ -67,6 +87,7 @@ def check_convergence_energy(x_new, w, energy_old, convergence_count, iteration)
         convergence_count = 0
     energy_old = np.copy(energy_new)
     return energy_old, convergence_count
+
 
 def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=False):
     """ 
@@ -76,7 +97,7 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
     # asyn_type: type of asynchronous update, "random" or sequential by default
         
     """
-    
+    x_current = 0
     if update_type == "synchronous":
         # Update the weights synchronously, aka "Little Model"
         x_current = np.copy(x)
@@ -84,16 +105,15 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
         # Compute energy of the initial state
         energy_old = energy(x, w)
         convergence_count = 0
-        
+
         # Iterate for convergence
-        for iteration in tqdm(range(ITERATIONS)):
+        for iteration in range(ITERATIONS):
             for i in range(x.shape[0]):
                 x_new[i, :] = set_sign(x_current, w, i)
                 # Compute energy for this state
 
             if convergence_type == "energy":
-                energy_old, convergence_count = check_convergence_energy(x_new, w, energy_old, convergence_count,
-                                                                         iteration)
+                energy_old, convergence_count = check_convergence_energy(x_new, w, energy_old, convergence_count)
                 if convergence_count > 5:
                     print("The network converged after {} iterations.".format(iteration))
                     break
@@ -102,7 +122,7 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
                     print("The network converged after {} iterations.".format(iteration))
                     break
             x_current = np.copy(x_new)
-    
+
     if update_type == "asynchronous":
         # Update the weights asynchroniously
         x_current = np.copy(x)
@@ -110,24 +130,22 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
         # Compute energy of the initial state
         energy_old = energy(x, w)
         convergence_count = 0
-        indexes = []
-        
+
         # Iterate for convergence
-        for iteration in tqdm(range(ITERATIONS)):
+        for iteration in range(ITERATIONS):
             indexes = []
-            #idx = shuffle(np.arange(0,x.shape[1]), random_state=0)
             for i in range(x.shape[0]):
                 for j in range(x.shape[1]):
                     if asyn_type == "random":
                         idx = np.random.randint(0, x.shape[1])
-                        if idx not in indexes: 
-                            indexes.append(idx) # so we update the indexes only once
-                        x_new[i, idx[j]] = np.where((x_current[i, :] @ w[idx[j]]) >= 0, 1, -1)
-                    else: x_new[i, j] = np.where((x_current[i, :] @ w[j]) >= 0, 1, -1)
+                        if idx not in indexes:
+                            indexes.append(idx)  # so we update the indexes only once
+                            x_new[i, idx] = np.where((x_current[i, :] @ w[idx]) >= 0, 1, -1)
+                    else:
+                        x_new[i, j] = np.where((x_current[i, :] @ w[j]) >= 0, 1, -1)
 
             if convergence_type == "energy":
-                energy_old, convergence_count = check_convergence_energy(x_new, w, energy_old, convergence_count,
-                                                                         iteration)
+                energy_old, convergence_count = check_convergence_energy(x_new, w, energy_old, convergence_count)
                 if convergence_count > 5:
                     print("The network converged after {} iterations.".format(iteration))
                     break
@@ -136,38 +154,25 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
                     print("The network converged after {} iterations.".format(iteration))
                     break
             x_current = np.copy(x_new)
-            
+
             # Task 3.2, plot every 100th iteration or so
             # to use this, comment out the parts for convergence so the network goes through all the iterations
-            iters = [100, 400, 700]
+            iters = [100, 200, 300, 400, 500, 600, 700]
             if iteration in iters:
-                display(x_current, "Recall after {} iterations.".format(iteration)) 
-                          
+                display(x_current, "Recall after {} iterations.".format(iteration))
+
     return x_current
 
-def find_attractors(data, data_updated, w):
+
+def find_attractors(data, data_updated):
     # Attractors are the patterns that don't change after weight update
     attractors = []
-    
+
     for i in range(data.shape[0]):
         if np.all(data[i] == data_updated[i]):
             attractors.append(data[i])
-    
+
     return attractors
-        
-def energy(state, w):
-    return np.sum(- state @ w @ state.T)
 
-def display(image, title=False):
-    # For task 3.2
-
-    # display images in shape (32, 32) and rotate them so face is up
-    plt.imshow(np.rot90(image.reshape(32, 32)), origin='lower', interpolation="nearest")
-    if title:
-        plt.title(title)
-    plt.show()
-    
-    
-    
 # TODO: Add bias
 # Asynchronous update: Maybe we should change the order of how we update?
