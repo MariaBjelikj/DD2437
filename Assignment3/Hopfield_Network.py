@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-ITERATIONS = 2000  # number of iterations for syncronious update
+ITERATIONS = 800  # number of iterations for syncronious update
 
 
 def generate_data(d_type):
@@ -142,7 +142,7 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
             
             # Task 3.2, plot every 100th iteration or so
             # to use this, comment out the parts for convergence so the network goes through all the iterations
-            iters = [200, 500, 1000, 1500, 2000, 2500, 2900]
+            iters = [100, 200, 300, 400, 500, 600, 700]
             if iteration in iters:
                 display(x_current, "Recall after {} iterations.".format(iteration))
                 
