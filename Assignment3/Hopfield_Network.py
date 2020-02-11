@@ -8,7 +8,6 @@ ITERATIONS = 1000  # number of iterations for syncronious update
 
 def generate_data(d_type):
     # For task 3.1
-
     if d_type == "original":
         x1d = [-1, -1, 1, -1, 1, -1, -1, 1]
         x2d = [-1, -1, -1, -1, -1, 1, -1, -1]
@@ -28,6 +27,7 @@ def generate_data(d_type):
         x3d = [1, -1, -1, 1, -1, 1, -1, -1]
         return np.vstack([x1d, x2d, x3d])
 
+
 def weights(x):
     # Update weights for Little Model
     n = x.shape[0]  # number of patterns
@@ -45,6 +45,7 @@ def weights(x):
     # w = w / M # normalize, only if bias is used
     return w
 
+
 def set_sign(x, w, index):
     x_sign = np.copy(x)
     for i in range(len(x[index, :])):
@@ -56,6 +57,16 @@ def set_sign(x, w, index):
         else:
             x_sign[index, i] = -1
     return x_sign[index, :]
+
+
+def check_convergence_energy(x_new, w, energy_old, convergence_count, iteration):
+    energy_new = energy(x_new, w)
+    if energy_old == energy_new:  # If the energy hasn't changed, converged
+        convergence_count += 1
+    else:
+        convergence_count = 0
+    energy_old = np.copy(energy_new)
+    return energy_old, convergence_count
 
 def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=False):
     """ 
@@ -70,9 +81,8 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
         # Update the weights synchronously, aka "Little Model"
         x_current = np.copy(x)
         x_new = np.copy(x)
-        
         # Compute energy of the initial state
-        E_current = energy(x, w)
+        energy_old = energy(x, w)
         convergence_count = 0
         
         # Iterate for convergence
@@ -80,33 +90,25 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
             for i in range(x.shape[0]):
                 x_new[i, :] = set_sign(x_current, w, i)
                 # Compute energy for this state
-            
+
             if convergence_type == "energy":
-                E_new = energy(x_new, w)
-                    
-                if E_new == E_current: # If the energy hasn't changed, converged
-                    convergence_count += 1
-                    
+                energy_old, convergence_count = check_convergence_energy(x_new, w, energy_old, convergence_count,
+                                                                         iteration)
                 if convergence_count > 5:
                     print("The network converged after {} iterations.".format(iteration))
                     break
-                    
-                E_current = np.copy(E_new)
-            
-            else: 
+            else:
                 if np.all(x_new == x_current):  # check recall
                     print("The network converged after {} iterations.".format(iteration))
-                    break  # the state is stable (convergence, break loop)
-                
+                    break
             x_current = np.copy(x_new)
     
     if update_type == "asynchronous":
         # Update the weights asynchroniously
         x_current = np.copy(x)
         x_new = np.copy(x)
-        
         # Compute energy of the initial state
-        E_current = energy(x, w)
+        energy_old = energy(x, w)
         convergence_count = 0
         indexes = []
         
@@ -123,24 +125,16 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
                         x_new[i, idx[j]] = np.where((x_current[i, :] @ w[idx[j]]) >= 0, 1, -1)
                     else: x_new[i, j] = np.where((x_current[i, :] @ w[j]) >= 0, 1, -1)
 
-                    
             if convergence_type == "energy":
-                E_new = energy(x_new, w)
-                    
-                if E_new == E_current: # If the energy hasn't changed, converged
-                    convergence_count += 1
-                    
+                energy_old, convergence_count = check_convergence_energy(x_new, w, energy_old, convergence_count,
+                                                                         iteration)
                 if convergence_count > 5:
                     print("The network converged after {} iterations.".format(iteration))
                     break
-                
-                E_current = np.copy(E_new)
-    
-            #else:
+            else:
                 if np.all(x_new == x_current):  # check recall
                     print("The network converged after {} iterations.".format(iteration))
-                    break  # the state is stable (convergence, break loop)
-                    
+                    break
             x_current = np.copy(x_new)
             
             # Task 3.2, plot every 100th iteration or so
