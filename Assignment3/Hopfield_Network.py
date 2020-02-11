@@ -1,7 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+from sklearn.utils import shuffle
 
-ITERATIONS = 800  # number of iterations for syncronious update
+ITERATIONS = 1000  # number of iterations for syncronious update
 
 
 def generate_data(d_type):
@@ -74,7 +76,7 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
         convergence_count = 0
         
         # Iterate for convergence
-        for iteration in range(ITERATIONS):
+        for iteration in tqdm(range(ITERATIONS)):
             for i in range(x.shape[0]):
                 x_new[i, :] = set_sign(x_current, w, i)
                 # Compute energy for this state
@@ -109,15 +111,16 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
         indexes = []
         
         # Iterate for convergence
-        for iteration in range(ITERATIONS):
-            #indexes = []
+        for iteration in tqdm(range(ITERATIONS)):
+            indexes = []
+            #idx = shuffle(np.arange(0,x.shape[1]), random_state=0)
             for i in range(x.shape[0]):
                 for j in range(x.shape[1]):
                     if asyn_type == "random":
                         idx = np.random.randint(0, x.shape[1])
-                        #if idx not in indexes: 
-                            #indexes.append(idx) # so we update the indexes only once
-                        x_new[i, idx] = np.where((x_current[i, :] @ w[idx]) >= 0, 1, -1)
+                        if idx not in indexes: 
+                            indexes.append(idx) # so we update the indexes only once
+                        x_new[i, idx[j]] = np.where((x_current[i, :] @ w[idx[j]]) >= 0, 1, -1)
                     else: x_new[i, j] = np.where((x_current[i, :] @ w[j]) >= 0, 1, -1)
 
                     
@@ -142,12 +145,9 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
             
             # Task 3.2, plot every 100th iteration or so
             # to use this, comment out the parts for convergence so the network goes through all the iterations
-            iters = [100, 200, 300, 400, 500, 600, 700]
+            iters = [100, 400, 700]
             if iteration in iters:
-                display(x_current, "Recall after {} iterations.".format(iteration))
-                
-            
-            
+                display(x_current, "Recall after {} iterations.".format(iteration)) 
                           
     return x_current
 

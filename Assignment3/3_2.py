@@ -22,5 +22,5 @@ display(prediction[1])"""
 
 
 # Random asynchronous (uncomment code for 3.2 in Hopfield_Network)
-display(data[9])
-recall(data[9:10, :].copy(), w, update_type="asynchronous", asyn_type="random")
+display(data[10])
+recall(data[10:11, :].copy(), w, update_type="asynchronous", asyn_type = 'random')
