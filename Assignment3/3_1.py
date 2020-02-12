@@ -1,8 +1,28 @@
 from Hopfield_Network import *
 import pandas as pd
 
-'extra data'
-# x = np.array(pd.read_csv("pict.dat", sep=',', header=None))
+
+def generate_data(d_type):
+    # For task 3.1
+    if d_type == "original":
+        x1d = [-1, -1, 1, -1, 1, -1, -1, 1]
+        x2d = [-1, -1, -1, -1, -1, 1, -1, -1]
+        x3d = [-1, 1, 1, -1, -1, 1, -1, 1]
+        return np.vstack([x1d, x2d, x3d])
+
+    elif d_type == "distorted":
+        x1d = [1, -1, 1, -1, 1, -1, -1, 1]  # one bit error
+        x2d = [1, 1, -1, -1, -1, 1, -1, -1]  # two bit error
+        x3d = [1, 1, 1, -1, 1, 1, -1, 1]  # two bit error
+        return np.vstack([x1d, x2d, x3d])
+
+    elif d_type == "super_distorted":
+        # more then half the data is distroted
+        x1d = [1, 1, -1, -1, -1, 1, -1, 1]
+        x2d = [1, 1, 1, -1, -1, -1, 1, -1]
+        x3d = [1, -1, -1, 1, -1, 1, -1, -1]
+        return np.vstack([x1d, x2d, x3d])
+
 
 x = generate_data("original")
 x_distorted = generate_data("distorted")

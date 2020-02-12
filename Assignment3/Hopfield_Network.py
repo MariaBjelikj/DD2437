@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+from tqdm import tqdm
 
-ITERATIONS = 10000  # number of iterations for syncronious update
+ITERATIONS = 1000  # number of iterations for syncronious update
 
 
 def generate_data(d_type):
@@ -70,13 +71,16 @@ def energy(state, w):
     return np.sum(- state @ w @ state.T)
 
 
-def display(image, title=""):
+def display(image, title="", save=False, filename=''):
     # For task 3.2
     # display images in shape (32, 32) and rotate them so face is up
-    plt.imshow(np.rot90(image.reshape(32, 32)), origin='lower', interpolation="nearest")
+    plt.figure()
+    displayplot = plt.imshow(np.rot90(image.reshape(32, 32)), origin='lower', interpolation="nearest")
     if title != "":
         plt.title(title)
-    plt.show()
+    if save == True:
+        plt.imsave(filename, (np.rot90(image.reshape(32, 32))))
+    #plt.show()
 
 
 def check_convergence_energy(x_new, w, energy_old, convergence_count):
@@ -93,10 +97,10 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
     """ 
     PARAMETERS:
     # update_type: can be "synchronous" or "asynchronous"
-    # convergence_type: choose "energy" for task 3.3 and above
+    # convergence_type: choose "energy" for task 3.3 and on
     # asyn_type: type of asynchronous update, "random" or sequential by default
-        
     """
+    
     x_current = 0
     if update_type == "synchronous":
         # Update the weights synchronously, aka "Little Model"
@@ -107,7 +111,7 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
         convergence_count = 0
 
         # Iterate for convergence
-        for iteration in range(ITERATIONS):
+        for iteration in tqdm(range(ITERATIONS)):
             for i in range(x.shape[0]):
                 x_new[i, :] = set_sign(x_current, w, i)
                 # Compute energy for this state
@@ -132,7 +136,7 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
         convergence_count = 0
 
         # Iterate for convergence
-        for iteration in range(ITERATIONS):
+        for iteration in tqdm(range(ITERATIONS)):
             for i in range(x.shape[0]):
                 if asyn_type == "random":
                     idx = np.random.randint(0, x.shape[1])
@@ -154,7 +158,7 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
 
             # Task 3.2, plot every 100th iteration or so
             # to use this, comment out the parts for convergence so the network goes through all the iterations
-            iters = np.arange(0, 10000, 200)
+            iters = np.arange(0, 1000, 200)
             if iteration in iters:
                 display(x_current, "Recall after {} iterations.".format(iteration))
 
