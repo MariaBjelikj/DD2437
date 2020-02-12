@@ -6,7 +6,7 @@ from tqdm import tqdm
 ITERATIONS = 1000  # number of iterations for syncronious update
 
 
-def weights(x, weights_type=False, symmetrical=False, diagonal_0 = false):
+def weights(x, weights_type=False, symmetrical=False, diagonal_0 =False):
     # Update weights for Little Model
     n = x.shape[0]  # number of patterns
     m = x.shape[1]  # number of neurons
@@ -59,7 +59,7 @@ def display(image, title="", save=False, filename=''):
         plt.title(title)
     if save == True:
         plt.imsave(filename, (np.rot90(image.reshape(32, 32))))
-    #plt.show()
+    plt.show()
 
 
 def check_convergence_energy(x_new, w, energy_old, convergence_count):
