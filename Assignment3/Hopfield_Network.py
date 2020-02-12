@@ -6,29 +6,7 @@ from tqdm import tqdm
 ITERATIONS = 1000  # number of iterations for syncronious update
 
 
-def generate_data(d_type):
-    # For task 3.1
-    if d_type == "original":
-        x1d = [-1, -1, 1, -1, 1, -1, -1, 1]
-        x2d = [-1, -1, -1, -1, -1, 1, -1, -1]
-        x3d = [-1, 1, 1, -1, -1, 1, -1, 1]
-        return np.vstack([x1d, x2d, x3d])
-
-    elif d_type == "distorted":
-        x1d = [1, -1, 1, -1, 1, -1, -1, 1]  # one bit error
-        x2d = [1, 1, -1, -1, -1, 1, -1, -1]  # two bit error
-        x3d = [1, 1, 1, -1, 1, 1, -1, 1]  # two bit error
-        return np.vstack([x1d, x2d, x3d])
-
-    elif d_type == "super_distorted":
-        # more then half the data is distroted
-        x1d = [1, 1, -1, -1, -1, 1, -1, 1]
-        x2d = [1, 1, 1, -1, -1, -1, 1, -1]
-        x3d = [1, -1, -1, 1, -1, 1, -1, -1]
-        return np.vstack([x1d, x2d, x3d])
-
-
-def weights(x, weights_type=False, symmetrical=False):
+def weights(x, weights_type=False, symmetrical=False, diagonal_0 = false):
     # Update weights for Little Model
     n = x.shape[0]  # number of patterns
     m = x.shape[1]  # number of neurons
@@ -39,8 +17,9 @@ def weights(x, weights_type=False, symmetrical=False):
         x_i = x[i, :]
         w += np.outer(x_i.T, x_i)
 
-    for i in range(m):
-        w[i, i] = 0  # fill diagonal with 0
+    if diagonal_0:
+        for i in range(m):
+            w[i, i] = 0  # fill diagonal with 0
 
     if weights_type == "normal":
         for i in range(m):
@@ -165,14 +144,9 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
     return x_current
 
 
-def find_attractors(data, data_updated):
-    # Attractors are the patterns that don't change after weight update
-    attractors = []
-
-    for i in range(data.shape[0]):
-        if np.all(data[i] == data_updated[i]):
-            attractors.append(data[i])
-
+def find_attractors(data, weight, update_type):
+    data_updated = recall(data, weight, update_type=update_type)
+    attractors = np.unique(data_updated, axis=0)
     return attractors
 
 # TODO: Add bias
