@@ -33,19 +33,6 @@ def weights(x, weights_type=False, symmetrical=False, diagonal_0 =False):
     return w
 
 
-def set_sign(x, w, index):
-    x_sign = np.copy(x)
-    for i in range(len(x[index, :])):
-        aux = 0
-        for j in range(len(x[index, :])):
-            aux += w[i, j] * x_sign[index, j]
-        if aux >= 0:
-            x_sign[index, i] = 1
-        else:
-            x_sign[index, i] = -1
-    return x_sign[index, :]
-
-
 def energy(state, w):
     return np.sum(- np.dot(state, np.dot(w, state.T)))
 
@@ -99,7 +86,7 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
 
             if convergence_type == "energy":
                 energy_old, convergence_count = check_convergence_energy(x_new, w, energy_old, convergence_count)
-                if convergence_count > 2:
+                if convergence_count > 0:
                     #print("The network converged after {} iterations.".format(iteration))
                     break
             else:
@@ -139,7 +126,7 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
 
             # Task 3.2, plot every 100th iteration or so
             # to use this, comment out the parts for convergence so the network goes through all the iterations
-            iters = np.arange(0, 1000, 200)
+            #iters = np.arange(0, 1000, 200)
             #if iteration in iters:
                 #display(x_current, "Recall after {} iterations.".format(iteration))
 

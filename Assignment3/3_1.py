@@ -24,8 +24,8 @@ def generate_data(d_type):
         return np.vstack([x1d, x2d, x3d])
 
     elif d_type == 'all_binary_comb':
-        permutation = list(itertools.product([-1,1],repeat=8))
-        return np.array(permutation)
+        data = list(itertools.product([-1,1],repeat=8))
+        return np.array(data)
 
 
 
