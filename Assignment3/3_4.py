@@ -13,7 +13,7 @@ data = np.loadtxt('pict.dat', delimiter=",", dtype=int).reshape(-1, 1024)
 w = weights(data[:3, :])
 image = 0
 counter = np.zeros(len(PERCENTAGES))
-counter = noised_images(PERCENTAGES, data, image, counter, w)
+counter = noised_images(PERCENTAGES, data, image, counter, w, noised_iterations=ITERATIONS)
 plt.figure()
 # sns.set_style('darkgrid')
 counter_plot = sns.lineplot(x = PERCENTAGES, y=counter)

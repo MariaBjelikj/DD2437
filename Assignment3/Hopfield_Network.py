@@ -7,13 +7,13 @@ from sklearn.utils import shuffle
 ITERATIONS = 1000  # number of iterations for syncronious update
 
 
-def noised_images(percentages, data, image, counter, w, noised_iterations=100):
+def noised_images(percentages, data, image, counter, w, noised_iterations):
     for i, perc in enumerate(percentages):
-        noised_data = np.copy(data)
-        indexes = shuffle(np.arange(image, noised_data.shape[1]))
-        for k in range(int(perc * noised_data.shape[1])):
-            noised_data[image, indexes[k]] = -noised_data[image, indexes[k]]
         for _ in tqdm(range(noised_iterations)):
+            noised_data = np.copy(data)
+            indexes = shuffle(np.arange(0, noised_data.shape[1]))
+            for k in range(int(perc * noised_data.shape[1])):
+                noised_data[image, indexes[k]] = -noised_data[image, indexes[k]]
             x_current = recall(noised_data[image:(image + 1), :], w, update_type="synchronous",
                                convergence_type='energy')
             if np.all(x_current == data[image]):
@@ -29,7 +29,8 @@ def weights(x, weights_type=False, symmetrical=False, diagonal_0=False):
     w = np.zeros([m, m])
     for i in range(n):
         # calculate weights
-        w += np.outer(x[i, :].T, x[i, :])
+        x_i = x[i, :]
+        w += np.outer(x_i.T, x_i)
 
     if diagonal_0:
         w = np.fill_diagonal(w, 0)
