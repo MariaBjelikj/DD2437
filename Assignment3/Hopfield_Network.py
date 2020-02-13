@@ -47,7 +47,7 @@ def set_sign(x, w, index):
 
 
 def energy(state, w):
-    return np.sum(- state @ w @ state.T)
+    return np.sum(- np.dot(state, np.dot(w, state.T)))
 
 
 def display(image, title="", save=False, filename=''):
@@ -97,7 +97,7 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
 
             if convergence_type == "energy":
                 energy_old, convergence_count = check_convergence_energy(x_new, w, energy_old, convergence_count)
-                if convergence_count > 5:
+                if convergence_count > 2:
                     print("The network converged after {} iterations.".format(iteration))
                     break
             else:
@@ -138,8 +138,8 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
             # Task 3.2, plot every 100th iteration or so
             # to use this, comment out the parts for convergence so the network goes through all the iterations
             iters = np.arange(0, 1000, 200)
-            if iteration in iters:
-                display(x_current, "Recall after {} iterations.".format(iteration))
+            #if iteration in iters:
+                #display(x_current, "Recall after {} iterations.".format(iteration))
 
     return x_current
 
