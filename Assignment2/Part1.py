@@ -4,9 +4,9 @@ from sklearn.metrics import mean_squared_error as mse
 from sklearn.metrics import mean_absolute_error as mae
 
 EPOCHS = 100
-ETA = 0.1
+ETA = 0.01
 ETA_list = [0.007, 0.01, 0.05, 0.1, 0.2]
-ITERATIONS = 1000  # for CL
+ITERATIONS = 10000  # for CL
 
 
 def generate_data(f_type, noise=False):
@@ -127,7 +127,8 @@ def predict_square(x, y, mean, variance, w):
 
 def competitive_learning(x, deadnode=False):
     np.random.shuffle(x)  # Shuffle data for more random selection
-    rbf_nodes = x[[0, 3, 8, 15, 22, 29, 34, 37, 45, 52, 58, 62]]  # Select nodes from data
+    #rbf_nodes = x[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]]  # Select nodes from data
+    rbf_nodes = x[np.arange(25)]
     # the higher the number of RBF nodes here, the better the prediction
 
     # plt.scatter(RBF_nodes, np.zeros(len(RBF_nodes)), color='r', label="RBF nodes before")
@@ -164,10 +165,10 @@ def competitive_learning(x, deadnode=False):
 def main():
     # --------------- 3.1: Training in Batch --------------- #
     error_thresholds = [0.1, 0.01, 0.001]
-    f_type = "square2x"
+    f_type = "sin2x"
     x_train, y_train, x_test, y_test = generate_data(f_type, False)
     y_predicted = 0
-    rbf_nodes = 25
+    rbf_nodes = 100
 
     # # variance_list = [0.1, 0.5, 0.8, 1.2, 1.5]
 
@@ -263,51 +264,51 @@ def main():
     # # --------------- 3.3: Competitive Learning --------------- #
 
     # # --------------- Training in Batch --------------- #
-    # f_type = "sin2x"
-    # x_train, y_train, x_test, y_test = generate_data(f_type, True)
-    # # y_predicted = 0
-    # variance = 0.5
-    # rbf_nodes = competitive_learning(x_train.copy())
+    f_type = "square2x"
+    x_train, y_train, x_test, y_test = generate_data(f_type, False)
+    # y_predicted = 0
+    variance = 0.1
+    rbf_nodes = competitive_learning(x_train.copy())
 
-    # mean = rbf_nodes
-    # w = train_batch(x_train, y_train, mean, variance)
+    mean = rbf_nodes
+    w = train_batch(x_train, y_train, mean, variance)
 
-    # # if f_type == "sin2x": y_predicted = predict(x_test, y_test, mean, variance, w)
-    # # else: y_predicted = predict_square(x_test, y_test, mean, variance, w)
-    # y_predicted = predict(x_test, mean, variance, w)
-    # # y_predicted = predict(x_test_clean, y_test_clean, mean, variance, w)
+    # if f_type == "sin2x": y_predicted = predict(x_test, y_test, mean, variance, w)
+    # else: y_predicted = predict_square(x_test, y_test, mean, variance, w)
+    y_predicted = predict(x_test, mean, variance, w)
+    # y_predicted = predict(x_test_clean, y_test_clean, mean, variance, w)
 
-    # # mean_square_error = mse(y_test, y_predicted)
-    # # print("The MSE is: {}".format(mean_square_error))
-    # mean_absolute_error = mae(y_test, y_predicted)
-    # print("The absolute residual error is {}".format(mean_absolute_error))
+    # mean_square_error = mse(y_test, y_predicted)
+    # print("The MSE is: {}".format(mean_square_error))
+    mean_absolute_error = mae(y_test, y_predicted)
+    print("The absolute residual error is {}".format(mean_absolute_error))
 
-    # plt.plot(x_train, y_train, label='real output')
-    # plt.plot(x_test, y_predicted, 'r--', label='prediction')
-    # plt.title("Training in batch mode, competitive learning")
-    # plt.legend()
-    # plt.show()
+    plt.plot(x_train, y_train, label='real output')
+    plt.plot(x_test, y_predicted, 'r--', label='prediction')
+    plt.title("Training in batch mode, competitive learning")
+    plt.legend()
+    plt.show()
 
     # --------------- Ballist data --------------- #
-    f_type = "ballist"
-    x_train, y_train, x_test, y_test = generate_data(f_type, True)
-    # y_predicted = 0
-    variance = [0.1,0.5,1,1.2,1.5,2]
-    rbf_nodes = competitive_learning(x_train.copy())
-    print(rbf_nodes)
+    # f_type = "ballist"
+    # x_train, y_train, x_test, y_test = generate_data(f_type, True)
+    # # y_predicted = 0
+    # variance = [0.1,0.5,1,1.2,1.5,2]
+    # rbf_nodes = competitive_learning(x_train.copy())
+    # print(rbf_nodes)
 
-    # Train the RBF network in batch mode
-    mean = rbf_nodes
+    # # Train the RBF network in batch mode
+    # mean = rbf_nodes
     
-    for var in variance:
-        mean_mae = []
-        for i in range(100):
-            w = train_batch(x_train, y_train, mean, var)
-            y_predicted = predict(x_test, mean, var, w)
-            mean_absolute_error = mae(y_test, y_predicted)
-            mean_mae.append(mean_absolute_error)  
+    # for var in variance:
+    #     mean_mae = []
+    #     for i in range(100):
+    #         w = train_batch(x_train, y_train, mean, var)
+    #         y_predicted = predict(x_test, mean, var, w)
+    #         mean_absolute_error = mae(y_test, y_predicted)
+    #         mean_mae.append(mean_absolute_error)  
         
-        print("The absolute residual error for variance {} is {}".format(var,np.mean(mean_mae)))
+    #     print("The absolute residual error for variance {} is {}".format(var,np.mean(mean_mae)))
 
     # plt.plot(y_predicted[:,0], y_predicted[:,1], "x", color="r", label="prediction")
     # plt.plot(y_test[:,0], y_test[:,1], "o", color="g", label="real output")

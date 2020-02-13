@@ -2,30 +2,41 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 from tqdm import tqdm
+from sklearn.utils import shuffle
 
 ITERATIONS = 1000  # number of iterations for syncronious update
 
 
-def weights(x, weights_type=False, symmetrical=False, diagonal_0 =False):
+def noised_images(percentages, data, image, counter, w, noised_iterations=100):
+    for i, perc in enumerate(percentages):
+        noised_data = np.copy(data)
+        indexes = shuffle(np.arange(image, noised_data.shape[1]))
+        for k in range(int(perc * noised_data.shape[1])):
+            noised_data[image, indexes[k]] = -noised_data[image, indexes[k]]
+        for _ in tqdm(range(noised_iterations)):
+            x_current = recall(noised_data[image:(image + 1), :], w, update_type="synchronous",
+                               convergence_type='energy')
+            if np.all(x_current == data[image]):
+                counter[i] += 1
+
+    return counter
+
+
+def weights(x, weights_type=False, symmetrical=False, diagonal_0=False):
     # Update weights for Little Model
     n = x.shape[0]  # number of patterns
     m = x.shape[1]  # number of neurons
-
     w = np.zeros([m, m])
     for i in range(n):
         # calculate weights
-        x_i = x[i, :]
-        w += np.outer(x_i.T, x_i)
+        w += np.outer(x[i, :].T, x[i, :])
 
     if diagonal_0:
-        for i in range(m):
-            w[i, i] = 0  # fill diagonal with 0
-
+        w = np.fill_diagonal(w, 0)
     if weights_type == "normal":
         for i in range(m):
             for j in range(m):
-                w[i][j] = random.normalvariate(0, 5)
-
+                w[i, j] = random.normalvariate(0, 5)
     if symmetrical:
         w = 0.5 * (w + w.T)
 
@@ -34,17 +45,17 @@ def weights(x, weights_type=False, symmetrical=False, diagonal_0 =False):
 
 
 def energy(state, w):
-    return np.sum(- np.dot(state, np.dot(w, state.T)))
+    return np.sum(-np.dot(state, np.dot(w, state.T)))
 
 
 def display(image, title="", save=False, filename=''):
     # For task 3.2
     # display images in shape (32, 32) and rotate them so face is up
     plt.figure()
-    displayplot = plt.imshow(np.rot90(image.reshape(32, 32)), origin='lower', interpolation="nearest")
+    plt.imshow(np.rot90(image.reshape(32, 32)), origin='lower', interpolation="nearest")
     if title != "":
         plt.title(title)
-    if save == True:
+    if save:
         plt.imsave(filename, (np.rot90(image.reshape(32, 32))))
     plt.show()
 
@@ -59,7 +70,7 @@ def check_convergence_energy(x_new, w, energy_old, convergence_count):
     return energy_old, convergence_count
 
 
-def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=False):
+def recall(x, w, update_type="synchronous", convergence_type="", asyn_type=False):
     """ 
     PARAMETERS:
     # update_type: can be "synchronous" or "asynchronous"
@@ -81,17 +92,17 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
             for i in range(x.shape[0]):
                 for j in range(x.shape[1]):
                     x_new[i, j] = np.where((x_current[i, :] @ w[j]) >= 0, 1, -1)
-                #x_new[i, :] = set_sign(x_current, w, i)
+                # x_new[i, :] = set_sign(x_current, w, i)
                 # Compute energy for this state
 
             if convergence_type == "energy":
                 energy_old, convergence_count = check_convergence_energy(x_new, w, energy_old, convergence_count)
-                if convergence_count > 0:
+                if convergence_count > 3:
                     #print("The network converged after {} iterations.".format(iteration))
                     break
             else:
                 if np.all(x_new == x_current):  # check recall
-                    #print("The network converged after {} iterations.".format(iteration))
+                    # print("The network converged after {} iterations.".format(iteration))
                     break
             x_current = np.copy(x_new)
 
@@ -126,9 +137,9 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
 
             # Task 3.2, plot every 100th iteration or so
             # to use this, comment out the parts for convergence so the network goes through all the iterations
-            #iters = np.arange(0, 1000, 200)
-            #if iteration in iters:
-                #display(x_current, "Recall after {} iterations.".format(iteration))
+            # iters = np.arange(0, 1000, 200)
+            # if iteration in iters:
+                # display(x_current, "Recall after {} iterations.".format(iteration))
 
     return x_current
 

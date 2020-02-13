@@ -2,7 +2,7 @@ import numpy as np
 import Perceptron_algorithm as alg
 import Part1 as data
 
-n_hidden = 8
+n_hidden = 20
 x, t, x_test, t_test = data.generate_data(f_type="sin2x", noise=True)
 x = x.reshape(1, len(x))
 t = t.reshape(1, len(t))
@@ -18,3 +18,5 @@ dw = np.zeros((n_hidden, x.shape[0]))
 x_grid = np.arange(min(x[0, :]), max(x[0, :]), (max(x[0, :]) - min(x[0, :])) / len(x[0]))
 x_grid = x_grid.reshape(1, len(x_grid))
 alg.function_approximation(x, w, v, dw, dv, t, x_grid, n_hidden, x_test, t_test)
+
+#print(data.mae())

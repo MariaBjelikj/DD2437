@@ -4,38 +4,19 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 
-PERCENTAGES = np.linspace(start = 0, stop = 1, num = 11)
-ITERATIONS = 2
+PERCENTAGES = np.linspace(start=0, stop=1, num=11)
+ITERATIONS = 100
 
 # Load data
 data = np.loadtxt('pict.dat', delimiter=",", dtype=int).reshape(-1, 1024)
 
-x = data[:3, :].copy()
-w = weights(x)
-
-for image in range(3):
-
-    counter = np.zeros((len(PERCENTAGES), 3))
-    for i,perc in enumerate(PERCENTAGES):
-        noised_data = np.copy(data)
-        indexes = shuffle(np.arange(0, noised_data.shape[1]))
-        for _ in range(ITERATIONS):
-            for k in range(int(perc * noised_data.shape[1])):
-                noised_data[image, indexes[k]] = -noised_data[image, indexes[k]]
-            x_current = recall(noised_data[image:(image+1), :], w, update_type="synchronous", convergence_type='energy')
-            if np.all(x_current == data[image]):
-                counter[i][image] += 1
-
-
-counter_df = pd.DataFrame(counter, columns=['image_0', 'image_1', 'image_2'])
-counterDF = counter_df.reset_index().melt(id_vars=['index'], var_name='col')
-
-print(counterDF)
-
-
+w = weights(data[:3, :])
+image = 0
+counter = np.zeros(len(PERCENTAGES))
+counter = noised_images(PERCENTAGES, data, image, counter, w)
 plt.figure()
-#sns.set_style('darkgrid')
-counter_plot = sns.lineplot(x = PERCENTAGES, y=counterDF['value'])
+# sns.set_style('darkgrid')
+counter_plot = sns.lineplot(x = PERCENTAGES, y=counter)
 counter_plot.set(xlabel='Noise level', ylabel='Accuracy')
 plt.show()
 
