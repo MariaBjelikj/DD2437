@@ -24,7 +24,7 @@ def iterative_patterns(w_mat):
         if aux not in uniques:
             uniques[aux] = 0
 
-    return w_mat.shape[0] - len(uniques)
+    return w_mat.shape[0] - len(uniques)  # Returning the number of not unique vectors
 
 
 def main():
@@ -35,8 +35,9 @@ def main():
     if PATTERNS:
         if ITERATIVE_WEIGHT:
             uniques = list()
+            w = 0
             for i in range(300):
-                w = weights(patterns[:i+1, :].reshape(i+1, 100))
+                w = weights(patterns[:i+1, :].reshape(i+1, 10))
                 uniques.append(iterative_patterns(w))
         else:
             w = weights(patterns)
