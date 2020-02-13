@@ -9,7 +9,7 @@ ITERATIONS = 100
 # Load data
 data = np.loadtxt('pict.dat', delimiter=",", dtype=int).reshape(-1, 1024)
 
-x = data[:3, :].copy()
+x = data[:4, :].copy()
 w = weights(x)
 
 image = 0   
@@ -38,7 +38,7 @@ plt.show()
 
 # recovered_filename = 'images/image{}_error{}_recovered'.format(image, i)
 # recovered_filename = recovered_filename.replace('.', ',', 1)
-# x_current = recall(noised_data[image:(image+1), :].copy(), w, update_type="synchronous", convergence_type='energy')
+# x_current = recall(noised_data[image:(image+1), :], w, update_type="synchronous", convergence_type='energy')
 # recovered = display(x_current, title = "Recovered noised imaged with error = {} for image {}".format(i, image), save=False, filename=recovered_filename)
 
 

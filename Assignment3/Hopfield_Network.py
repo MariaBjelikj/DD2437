@@ -90,19 +90,21 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
         convergence_count = 0
 
         # Iterate for convergence
-        for iteration in tqdm(range(ITERATIONS)):
+        for iteration in range(ITERATIONS):
             for i in range(x.shape[0]):
-                x_new[i, :] = set_sign(x_current, w, i)
+                for j in range(x.shape[1]):
+                    x_new[i, j] = np.where((x_current[i, :] @ w[j]) >= 0, 1, -1)
+                #x_new[i, :] = set_sign(x_current, w, i)
                 # Compute energy for this state
 
             if convergence_type == "energy":
                 energy_old, convergence_count = check_convergence_energy(x_new, w, energy_old, convergence_count)
                 if convergence_count > 2:
-                    print("The network converged after {} iterations.".format(iteration))
+                    #print("The network converged after {} iterations.".format(iteration))
                     break
             else:
                 if np.all(x_new == x_current):  # check recall
-                    print("The network converged after {} iterations.".format(iteration))
+                    #print("The network converged after {} iterations.".format(iteration))
                     break
             x_current = np.copy(x_new)
 
@@ -115,7 +117,7 @@ def recall(x, w, update_type="synchronous", convergence_type=False, asyn_type=Fa
         convergence_count = 0
 
         # Iterate for convergence
-        for iteration in tqdm(range(ITERATIONS)):
+        for iteration in range(ITERATIONS):
             for i in range(x.shape[0]):
                 if asyn_type == "random":
                     idx = np.random.randint(0, x.shape[1])
