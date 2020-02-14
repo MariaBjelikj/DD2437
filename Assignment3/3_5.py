@@ -5,7 +5,13 @@ import seaborn as sns
 PERCENTAGES = np.linspace(start=0, stop=1, num=11)
 ITERATIONS = 100
 PATTERNS = True
+BIASED_PATTERNS = True
 ITERATIVE_WEIGHT = True
+
+
+def biased_random_patterns(size, columns=1):
+    patterns = np.sign(0.5 + np.random.uniform(-1, 1, size * columns))
+    return np.where(patterns >= 0, 1, -1)
 
 
 def random_patterns(size, columns=1):
@@ -28,11 +34,11 @@ def iterative_patterns(w_mat):
 
 
 def main():
-    # Load data
-    data = np.loadtxt('pict.dat', delimiter=",", dtype=int).reshape(-1, 1024)
-    patterns = random_patterns(100, 300)
-
     if PATTERNS:
+        if BIASED_PATTERNS:
+            patterns = biased_random_patterns(100, 300)  # Generating biased random patterns
+        else:
+            patterns = random_patterns(100, 300)  # Generating random patterns
         if ITERATIVE_WEIGHT:
             uniques = list()
             w = 0
@@ -52,12 +58,14 @@ def main():
         input("Press enter to continue...")
 
     else:
+        # Load data
+        data = np.loadtxt('pict.dat', delimiter=",", dtype=int).reshape(-1, 1024)
         for pat in range(4, 8):
             print("Running network for image", pat)
             w = weights(data[:pat, :])
             image = 0
             counter = np.zeros(len(PERCENTAGES))
-            counter = noised_images(PERCENTAGES, data, image, counter, w)
+            counter = noised_images(PERCENTAGES, data, image, counter, w, noised_iterations=100)
             plt.figure()
             # sns.set_style('darkgrid')
             counter_plot = sns.lineplot(x=PERCENTAGES, y=counter)
