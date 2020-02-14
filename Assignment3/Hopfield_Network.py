@@ -17,28 +17,26 @@ def iterative_patterns_accuracy(patterns, x_current):
         if aux > 0: 
             acc_counter += 1
                 
-
     return acc_counter/patterns.shape[0]
 
 
 
 def noised_images(percentages, data, pattern_position, counter, w, noised_iterations=1, return_data=False, iterative_patterns=False):
     for i, perc in enumerate(percentages):
-        'CHECK FOR ALL RESULTS IF THIS FOR LOOP DOES NOT AFFECT THE RESULT, I BELIEVE IT DOES NOT'
-        #for _ in tqdm(range(noised_iterations)):
-        noised_data = np.copy(data)
-        indexes = shuffle(np.arange(0, noised_data.shape[1]))
-        for k in range(int(perc * noised_data.shape[1])):
-            noised_data[pattern_position, indexes[k]] = -noised_data[pattern_position, indexes[k]]
-        x_current = recall(noised_data[pattern_position:(pattern_position + 1), :], w, update_type="synchronous",
-                            convergence_type='energy')
-        
-        if iterative_patterns:
-            counter = iterative_patterns_accuracy(noised_data[:pattern_position+1, :], x_current)
-        
-        else: 
-            if np.all(x_current == data[pattern_position]):
-                counter[i] += 1
+        for _ in tqdm(range(noised_iterations)):
+            noised_data = np.copy(data)
+            indexes = shuffle(np.arange(0, noised_data.shape[1]))
+            for k in range(int(perc * noised_data.shape[1])):
+                noised_data[pattern_position, indexes[k]] = -noised_data[pattern_position, indexes[k]]
+            x_current = recall(noised_data[pattern_position:(pattern_position + 1), :], w, update_type="synchronous",
+                                convergence_type='energy')
+            
+            if iterative_patterns:
+                counter = iterative_patterns_accuracy(noised_data[:pattern_position+1, :], x_current)
+            
+            else: 
+                if np.all(x_current == data[pattern_position]):
+                    counter[i] += 1
             
     if return_data == True:
         return counter, x_current
