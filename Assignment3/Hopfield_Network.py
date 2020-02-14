@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
-from tqdm import tqdm
 from sklearn.utils import shuffle
+from tqdm import tqdm
 
 ITERATIONS = 1000  # number of iterations for syncronious update
 
@@ -13,15 +13,16 @@ def iterative_patterns_accuracy(patterns, x_current):
         aux = 0
         for i in range(patterns.shape[0]):
             if np.all(x_current[j] == patterns[i]):
-                aux +=1
-        if aux > 0: 
+                aux += 1
+        if aux > 0:
             acc_counter += 1
-                
-    return acc_counter/patterns.shape[0]
+
+    return acc_counter / patterns.shape[0]
 
 
-
-def noised_images(percentages, data, pattern_position, counter, w, noised_iterations=1, return_data=False, iterative_patterns=False):
+def noised_images(percentages, data, pattern_position, counter, w, noised_iterations=1, return_data=False,
+                  iterative_patterns=False):
+    x_current = 0
     for i, perc in enumerate(percentages):
         for _ in tqdm(range(noised_iterations)):
             noised_data = np.copy(data)
@@ -38,9 +39,9 @@ def noised_images(percentages, data, pattern_position, counter, w, noised_iterat
                 if np.all(x_current == data[pattern_position]):
                     counter[i] += 1
             
-    if return_data == True:
+    if return_data:
         return counter, x_current
-    
+
     return counter
 
 
@@ -55,7 +56,7 @@ def weights(x, weights_type=False, symmetrical=False, diagonal=''):
         w += np.outer(x_i.T, x_i)
 
         if diagonal == 'diagonal_0':
-            w[i,i] = 0
+            np.fill_diagonal(w, 0)
     if weights_type == "normal":
         for i in range(m):
             for j in range(m):
@@ -100,7 +101,7 @@ def recall(x, w, update_type="synchronous", convergence_type="", asyn_type=False
     # convergence_type: choose "energy" for task 3.3 and on
     # asyn_type: type of asynchronous update, "random" or sequential by default
     """
-    
+
     x_current = 0
     if update_type == "synchronous":
         # Update the weights synchronously, aka "Little Model"
@@ -120,7 +121,7 @@ def recall(x, w, update_type="synchronous", convergence_type="", asyn_type=False
             if convergence_type == "energy":
                 energy_old, convergence_count = check_convergence_energy(x_new, w, energy_old, convergence_count)
                 if convergence_count > 3:
-                    #print("The network converged after {} iterations.".format(iteration))
+                    # print("The network converged after {} iterations.".format(iteration))
                     break
             else:
                 if np.all(x_new == x_current):  # check recall
@@ -145,7 +146,6 @@ def recall(x, w, update_type="synchronous", convergence_type="", asyn_type=False
                 else:
                     for j in range(x.shape[1]):
                         x_new[i, j] = np.where((x_current[i, :] @ w[j]) >= 0, 1, -1)
-                        
 
             if convergence_type == "energy":
                 energy_old, convergence_count = check_convergence_energy(x_new, w, energy_old, convergence_count)
@@ -162,7 +162,7 @@ def recall(x, w, update_type="synchronous", convergence_type="", asyn_type=False
             # to use this, comment out the parts for convergence so the network goes through all the iterations
             # iters = np.arange(0, 1000, 200)
             # if iteration in iters:
-                # display(x_current, "Recall after {} iterations.".format(iteration))
+            # display(x_current, "Recall after {} iterations.".format(iteration))
 
     return x_current
 
