@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 PERCENTAGES = np.linspace(start=0, stop=1, num=11)
 ITERATIONS = 100
 
+np.random.seed(42)
+
 # Load data
 data = np.loadtxt('pict.dat', delimiter=",", dtype=int).reshape(-1, 1024)
 
