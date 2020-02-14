@@ -1,28 +1,51 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
-from tqdm import tqdm
 from sklearn.utils import shuffle
 
 ITERATIONS = 1000  # number of iterations for syncronious update
 
 
-def noised_images(percentages, data, image, counter, w, noised_iterations):
+def iterative_patterns_accuracy(patterns, x_current):
+    acc_counter = 0
+    for j in range(x_current.shape[0]):
+        aux = 0
+        for i in range(patterns.shape[0]):
+            if np.all(x_current[j] == patterns[i]):
+                aux += 1
+        if aux > 0:
+            acc_counter += 1
+
+    return acc_counter / patterns.shape[0]
+
+
+def noised_images(percentages, data, pattern_position, counter, w, return_data=False,
+                  iterative_patterns=False):
+    x_current = 0
     for i, perc in enumerate(percentages):
-        for _ in tqdm(range(noised_iterations)):
-            noised_data = np.copy(data)
-            indexes = shuffle(np.arange(0, noised_data.shape[1]))
-            for k in range(int(perc * noised_data.shape[1])):
-                noised_data[image, indexes[k]] = -noised_data[image, indexes[k]]
-            x_current = recall(noised_data[image:(image + 1), :], w, update_type="synchronous",
-                               convergence_type='energy')
-            if np.all(x_current == data[image]):
+        # TODO:'CHECK FOR ALL RESULTS IF THIS FOR LOOP DOES NOT AFFECT THE RESULT, I BELIEVE IT DOES NOT'
+        # for _ in tqdm(range(noised_iterations)):
+        noised_data = np.copy(data)
+        indexes = shuffle(np.arange(0, noised_data.shape[1]))
+        for k in range(int(perc * noised_data.shape[1])):
+            noised_data[pattern_position, indexes[k]] = -noised_data[pattern_position, indexes[k]]
+        x_current = recall(noised_data[pattern_position:(pattern_position + 1), :], w, update_type="synchronous",
+                           convergence_type='energy')
+
+        if iterative_patterns:
+            counter = iterative_patterns_accuracy(noised_data[:pattern_position + 1, :], x_current)
+
+        else:
+            if np.all(x_current == data[pattern_position]):
                 counter[i] += 1
+
+    if return_data:
+        return counter, x_current
 
     return counter
 
 
-def weights(x, weights_type=False, symmetrical=False, diagonal_0=False):
+def weights(x, weights_type=False, symmetrical=False, diagonal=''):
     # Update weights for Little Model
     n = x.shape[0]  # number of patterns
     m = x.shape[1]  # number of neurons
@@ -32,8 +55,8 @@ def weights(x, weights_type=False, symmetrical=False, diagonal_0=False):
         x_i = x[i, :]
         w += np.outer(x_i.T, x_i)
 
-    if diagonal_0:
-        w = np.fill_diagonal(w, 0)
+        if diagonal == 'diagonal_0':
+            np.fill_diagonal(w, 0)
     if weights_type == "normal":
         for i in range(m):
             for j in range(m):
@@ -78,7 +101,7 @@ def recall(x, w, update_type="synchronous", convergence_type="", asyn_type=False
     # convergence_type: choose "energy" for task 3.3 and on
     # asyn_type: type of asynchronous update, "random" or sequential by default
     """
-    
+
     x_current = 0
     if update_type == "synchronous":
         # Update the weights synchronously, aka "Little Model"
@@ -93,13 +116,12 @@ def recall(x, w, update_type="synchronous", convergence_type="", asyn_type=False
             for i in range(x.shape[0]):
                 for j in range(x.shape[1]):
                     x_new[i, j] = np.where((x_current[i, :] @ w[j]) >= 0, 1, -1)
-                # x_new[i, :] = set_sign(x_current, w, i)
                 # Compute energy for this state
 
             if convergence_type == "energy":
                 energy_old, convergence_count = check_convergence_energy(x_new, w, energy_old, convergence_count)
                 if convergence_count > 3:
-                    #print("The network converged after {} iterations.".format(iteration))
+                    # print("The network converged after {} iterations.".format(iteration))
                     break
             else:
                 if np.all(x_new == x_current):  # check recall
@@ -140,7 +162,7 @@ def recall(x, w, update_type="synchronous", convergence_type="", asyn_type=False
             # to use this, comment out the parts for convergence so the network goes through all the iterations
             # iters = np.arange(0, 1000, 200)
             # if iteration in iters:
-                # display(x_current, "Recall after {} iterations.".format(iteration))
+            # display(x_current, "Recall after {} iterations.".format(iteration))
 
     return x_current
 
