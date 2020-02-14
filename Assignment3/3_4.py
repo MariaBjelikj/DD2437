@@ -3,6 +3,7 @@ from sklearn.utils import shuffle
 import numpy as np
 import seaborn as sns
 import pandas as pd
+import matplotlib.pyplot as plt
 
 PERCENTAGES = np.linspace(start=0, stop=1, num=11)
 ITERATIONS = 100
@@ -19,15 +20,12 @@ plt.figure()
 counter_plot = sns.lineplot(x = PERCENTAGES, y=counter)
 counter_plot.set(xlabel='Noise level', ylabel='Accuracy')
 plt.show()
+############ PLOT SPECIFIC PERCENTAGE
+# counter = np.zeros(len(PERCENTAGES))
+# counter, x_current = noised_images([0.9], data, image, counter, w, noised_iterations=ITERATIONS, return_data = True)
+# display(x_current, title = "Recovered noised imaged with error 0.9")
 
-# noised_filename = 'images/image{}_error{}_noised'.format(image, i)
-# noised_filename = noised_filename.replace('.', ',', 1)
-# noised = display(noised_data[image], title = "Original noised imaged with error = {} for image {}".format(i,image), save=False, filename=noised_filename)
 
-# recovered_filename = 'images/image{}_error{}_recovered'.format(image, i)
-# recovered_filename = recovered_filename.replace('.', ',', 1)
-# x_current = recall(noised_data[image:(image+1), :].copy(), w, update_type="synchronous", convergence_type='energy')
-# recovered = display(x_current, title = "Recovered noised imaged with error = {} for image {}".format(i, image), save=False, filename=recovered_filename)
 
 
     

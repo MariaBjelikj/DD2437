@@ -7,7 +7,7 @@ from sklearn.utils import shuffle
 ITERATIONS = 1000  # number of iterations for syncronious update
 
 
-def noised_images(percentages, data, image, counter, w, noised_iterations):
+def noised_images(percentages, data, image, counter, w, noised_iterations, return_data=False):
     for i, perc in enumerate(percentages):
         for _ in tqdm(range(noised_iterations)):
             noised_data = np.copy(data)
@@ -18,6 +18,8 @@ def noised_images(percentages, data, image, counter, w, noised_iterations):
                                convergence_type='energy')
             if np.all(x_current == data[image]):
                 counter[i] += 1
+    # if return_data == True:
+    #     return counter, x_current
 
     return counter
 
@@ -33,7 +35,8 @@ def weights(x, weights_type=False, symmetrical=False, diagonal_0=False):
         w += np.outer(x_i.T, x_i)
 
     if diagonal_0:
-        w = np.fill_diagonal(w, 0)
+        #w = np.fill_diagonal(w, 0)
+        w[range(w.shape[0]), range(w.shape[0])] = 0
     if weights_type == "normal":
         for i in range(m):
             for j in range(m):
@@ -124,6 +127,7 @@ def recall(x, w, update_type="synchronous", convergence_type="", asyn_type=False
                 else:
                     for j in range(x.shape[1]):
                         x_new[i, j] = np.where((x_current[i, :] @ w[j]) >= 0, 1, -1)
+                        
 
             if convergence_type == "energy":
                 energy_old, convergence_count = check_convergence_energy(x_new, w, energy_old, convergence_count)
