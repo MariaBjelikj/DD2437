@@ -26,7 +26,7 @@ def iterative_patterns(w_mat):
         if aux not in uniques:
             uniques[aux] = 0
 
-    return w_mat.shape[0] - len(uniques)
+    return w_mat.shape[0] - len(uniques)  # Returning the number of not unique vectors
 
 
 def main():
