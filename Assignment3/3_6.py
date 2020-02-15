@@ -6,12 +6,12 @@ from tqdm import tqdm
 
 SPARSE_PATTERN = True
 NOISE_ITERATIVE = True
-THETA = [0, 0.5, 1, 2]
+THETA = np.linspace(start=-1, stop=3, num=5)
 np.random.seed(42)
 
 
 def active_patterns(size, num_patterns=1):
-    return np.array(np.random.choice([0, 1], size=size * num_patterns, p=[0.9, 0.1])).reshape(-1, size)
+    return np.array(np.random.choice([0, 1], size=size * num_patterns, p=[0.99, 0.01])).reshape(-1, size)
 
 
 def main():
