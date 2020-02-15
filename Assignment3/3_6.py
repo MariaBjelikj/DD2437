@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 SPARSE_PATTERN = True
 NOISE_ITERATIVE = True
-THETA = [0, 0.5, 1, 2, 10]
+THETA = [0, 0.5, 1, 2]
 
 
 def active_patterns(size, num_patterns=1):
@@ -15,7 +15,7 @@ def active_patterns(size, num_patterns=1):
 
 def main():
     num_units = 100
-    num_patterns = 30
+    num_patterns = 70
     patterns = active_patterns(num_units, num_patterns)  # Generating 10% active patterns
 
     for theta in THETA:
@@ -25,7 +25,7 @@ def main():
             for j in range(i + 1):
                 counter_aux, x_current = noised_images([0.1], patterns, j, counter, w, return_data=True,
                                                        iterative_patterns=NOISE_ITERATIVE, theta=theta,
-                                                       sparse_pattern=SPARSE_PATTERN)
+                                                       sparse_pattern=SPARSE_PATTERN, noised_iterations=50)
                 counter[i] += iterative_patterns_accuracy(patterns[:i+1, :], x_current)
         plt.plot(np.linspace(start=1, stop=num_patterns, num=len(counter)), counter,
                  label=r"$\theta = {}$".format(theta))
