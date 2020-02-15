@@ -21,7 +21,7 @@ def main():
     for theta in THETA:
         counter = np.zeros(num_patterns)
         for i in tqdm(range(num_patterns)):
-            w = weights(patterns[:i + 1, :].reshape(i + 1, num_units), sparse_pattern=SPARSE_PATTERN)
+            w = weights(patterns[:i + 1, :].reshape(i + 1, num_units), sparse_pattern=SPARSE_PATTERN, rho=0.01)
             for j in range(i + 1):
                 counter_aux, x_current = noised_images([0.1], patterns, j, counter, w, return_data=True,
                                                        iterative_patterns=NOISE_ITERATIVE, theta=theta)

@@ -44,12 +44,17 @@ def noised_images(percentages, data, pattern_position, counter, w, noised_iterat
     return counter
 
 
-def weights(x, weights_type=False, symmetrical=False, diagonal='', sparse_pattern=False):
+def weights(x, weights_type=False, symmetrical=False, diagonal='', sparse_pattern=False, rho=None):
     # Update weights for Little Model
     n = x.shape[0]  # number of patterns
     m = x.shape[1]  # number of neurons
     w = np.zeros([m, m])
-    average_activity = 1 / (n * m) * sum(sum(x))
+
+    if rho is not None:
+        average_activity = rho
+    else:
+        average_activity = 1 / (n * m) * sum(sum(x))
+
     for i in range(n):
         # calculate weights
         if sparse_pattern:
