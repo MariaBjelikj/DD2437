@@ -20,7 +20,7 @@ def iterative_patterns_accuracy(patterns, x_current):
 
 
 def noised_images(percentages, data, pattern_position, counter, w, noised_iterations=1,
-                  return_data=False, iterative_patterns=False, theta=0):
+                  return_data=False, iterative_patterns=False, theta=1, sparse_pattern=False):
     x_current = 0
     for i, perc in enumerate(percentages):
         for _ in range(noised_iterations):
@@ -29,7 +29,7 @@ def noised_images(percentages, data, pattern_position, counter, w, noised_iterat
             for k in range(int(perc * noised_data.shape[1])):
                 noised_data[pattern_position, indexes[k]] = -noised_data[pattern_position, indexes[k]]
             x_current = recall(noised_data[pattern_position:(pattern_position + 1), :], w, update_type="synchronous",
-                               convergence_type='energy', theta=theta)
+                               convergence_type='energy', theta=theta, sparse_pattern=sparse_pattern)
 
             if iterative_patterns:
                 counter = iterative_patterns_accuracy(noised_data[:pattern_position + 1, :], x_current)
@@ -103,7 +103,7 @@ def check_convergence_energy(x_new, w, energy_old, convergence_count):
     return energy_old, convergence_count
 
 
-def recall(x, w, update_type="synchronous", convergence_type="", asyn_type=False, sparse_pattern=False, theta=0):
+def recall(x, w, update_type="synchronous", convergence_type="", asyn_type=False, sparse_pattern=False, theta=1):
     """ 
     PARAMETERS:
     # update_type: can be "synchronous" or "asynchronous"
