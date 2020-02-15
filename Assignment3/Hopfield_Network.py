@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 from sklearn.utils import shuffle
-from tqdm import tqdm
 
 ITERATIONS = 1000  # number of iterations for syncronious update
 
@@ -20,7 +19,8 @@ def iterative_patterns_accuracy(patterns, x_current):
     return acc_counter / patterns.shape[0]
 
 
-def noised_images(percentages, data, pattern_position, counter, w, noised_iterations=1, return_data=False,iterative_patterns=False, theta=0):
+def noised_images(percentages, data, pattern_position, counter, w, noised_iterations=1,
+                  return_data=False, iterative_patterns=False, theta=0):
     x_current = 0
     for i, perc in enumerate(percentages):
         for _ in range(noised_iterations):
@@ -28,27 +28,28 @@ def noised_images(percentages, data, pattern_position, counter, w, noised_iterat
             indexes = shuffle(np.arange(0, noised_data.shape[1]))
             for k in range(int(perc * noised_data.shape[1])):
                 noised_data[pattern_position, indexes[k]] = -noised_data[pattern_position, indexes[k]]
-            x_current = recall(noised_data[pattern_position:(pattern_position + 1), :], w, update_type="synchronous", convergence_type='energy', theta = theta)
-            
+            x_current = recall(noised_data[pattern_position:(pattern_position + 1), :], w, update_type="synchronous",
+                               convergence_type='energy', theta=theta)
+
             if iterative_patterns:
-                counter = iterative_patterns_accuracy(noised_data[:pattern_position+1, :], x_current)
-            
-            else: 
+                counter = iterative_patterns_accuracy(noised_data[:pattern_position + 1, :], x_current)
+
+            else:
                 if np.all(x_current == data[pattern_position]):
                     counter[i] += 1
-            
+
     if return_data:
         return counter, x_current
 
     return counter
 
 
-def weights(x, weights_type=False, symmetrical=False, diagonal='',sparse_pattern = False):
+def weights(x, weights_type=False, symmetrical=False, diagonal='', sparse_pattern=False):
     # Update weights for Little Model
     n = x.shape[0]  # number of patterns
     m = x.shape[1]  # number of neurons
     w = np.zeros([m, m])
-    average_activity = 1/(n*m)* sum(sum(x))
+    average_activity = 1 / (n * m) * sum(sum(x))
     for i in range(n):
         # calculate weights
         if sparse_pattern:
@@ -59,15 +60,15 @@ def weights(x, weights_type=False, symmetrical=False, diagonal='',sparse_pattern
 
     if diagonal == 'diagonal_0':
         np.fill_diagonal(w, 0)
-                
+
     if weights_type == "normal":
         for i in range(m):
             for j in range(m):
                 w[i, j] = random.normalvariate(0, 5)
     if symmetrical:
-        w = 0.5 * (w + w.T)           
+        w = 0.5 * (w + w.T)
 
-    # w = w / M # normalize, only if bias is used
+        # w = w / M # normalize, only if bias is used
     return w
 
 
@@ -97,7 +98,7 @@ def check_convergence_energy(x_new, w, energy_old, convergence_count):
     return energy_old, convergence_count
 
 
-def recall(x, w, update_type="synchronous", convergence_type="", asyn_type=False, sparse_pattern = False, theta = 0):
+def recall(x, w, update_type="synchronous", convergence_type="", asyn_type=False, sparse_pattern=False, theta=0):
     """ 
     PARAMETERS:
     # update_type: can be "synchronous" or "asynchronous"
@@ -120,8 +121,8 @@ def recall(x, w, update_type="synchronous", convergence_type="", asyn_type=False
                 for j in range(x.shape[1]):
                     if sparse_pattern:
                         update_rule = (x_current[i, :] @ w[j] - theta)
-                        x_new[i, j] = 0.5 + 0.5*np.where((update_rule) >= 0, 1, -1)
-                    else: 
+                        x_new[i, j] = 0.5 + 0.5 * np.where(update_rule >= 0, 1, -1)
+                    else:
                         x_new[i, j] = np.where((x_current[i, :] @ w[j]) >= 0, 1, -1)
                 # Compute energy for this state
 

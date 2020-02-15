@@ -1,6 +1,6 @@
 from Hopfield_Network import *
-import pandas as pd
 import itertools
+
 
 def generate_data(d_type):
     # For task 3.1
@@ -24,34 +24,32 @@ def generate_data(d_type):
         return np.vstack([x1d, x2d, x3d])
 
     elif d_type == 'all_binary_comb':
-        data = list(itertools.product([-1,1],repeat=8))
+        data = list(itertools.product([-1, 1], repeat=8))
         return np.array(data)
 
 
+def main():
+    x = generate_data("original")
+    x_distorted = generate_data("distorted")
+    x_super_distorted = generate_data("super_distorted")
+
+    w = weights(x)
+    x_updated = recall(x, w, update_type="synchronous")
+    x_updated_distorted = recall(x_distorted, w, update_type="synchronous")
+    x_updated_super_distorted = recall(x_super_distorted, w, update_type="synchronous")
+
+    print("\nOriginal data:\n", x)
+    print("x updated:\n", x_updated)
+    print("x updated distorted:\n", x_updated_distorted)
+    print("x updated super distorted:\n", x_updated_super_distorted)
+
+    attractor_data = generate_data("all_binary_comb")
+
+    attractors = find_attractors(attractor_data, w, update_type="synchronous")
+    print("The attractors are: ")
+    print(attractors)
+    print(attractors.shape[0])
 
 
-x = generate_data("original")
-x_distorted = generate_data("distorted")
-x_super_distorted = generate_data("super_distorted")
-
-w = weights(x)
-x_updated = recall(x, w, update_type="synchronous")
-x_updated_distorted = recall(x_distorted, w, update_type="synchronous")
-x_updated_super_distorted = recall(x_super_distorted, w, update_type="synchronous")
-
-
-print("\nOriginal data:\n", x)
-print("x updated distorted:\n", x_updated_distorted)
-print("x updated super distorted:\n", x_updated_super_distorted)
-
-
-attractor_data = generate_data("all_binary_comb")
-
-attractors = find_attractors(attractor_data, w, update_type="synchronous")
-print("The attractors are: ")
-print(attractors)
-print(attractors.shape[0])
-
-# the distorted converge with 2 iterations and get the right result
-# the super distorted converge with 2 iterations, however it does not get the right result
-# WHAT IS AN ATTRACTOR?
+if __name__ == "__main__":
+    main()
