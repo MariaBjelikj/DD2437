@@ -40,12 +40,14 @@ def main():
                     w = weights(patterns[:i + 1, :].reshape(i + 1, num_units), diagonal=diagonal)
                     for j in range(i + 1):
                         if NOISE_ITERATIVE:
-                            counter_aux, x_current = noised_images([0.4], patterns, j, counter, w, return_data=True, iterative_patterns=NOISE_ITERATIVE)
+                            counter_aux, x_current = noised_images([0.4], patterns, j, counter, w, return_data=True,
+                                                                   iterative_patterns=NOISE_ITERATIVE)
                         else:
                             x_current = recall(patterns[j:j + 1, :], w, update_type="synchronous",
-                                                convergence_type='energy')
+                                               convergence_type='energy')
                         counter[i] += iterative_patterns_accuracy(patterns[:i + 1, :], x_current)
-                plt.plot(np.linspace(start=1, stop=num_patterns, num=len(counter)), counter,label=DIAGONAL_LABELS[label])
+                plt.plot(np.linspace(start=1, stop=num_patterns, num=len(counter)), counter,
+                         label=DIAGONAL_LABELS[label])
             plt.xlabel('Training patterns')
             plt.ylabel('Accuracy')
             plt.legend()

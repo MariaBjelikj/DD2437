@@ -6,17 +6,22 @@ from tqdm import tqdm
 
 SPARSE_PATTERN = True
 NOISE_ITERATIVE = True
-THETA = np.linspace(start=-1, stop=3, num=5)
+THETA = [-1, 0, 0.5, 1, 2]
 np.random.seed(42)
 
 
-def active_patterns(size, num_patterns=1):
-    return np.array(np.random.choice([0, 1], size=size * num_patterns, p=[0.99, 0.01])).reshape(-1, size)
+def active_patterns(size, num_patterns=1, active_num=0.1):
+    positions = np.arange(0, size * num_patterns)
+    np.random.shuffle(positions)
+    result = np.zeros(size * num_patterns)
+    for i in range(round(active_num * (size * num_patterns))):
+        result[positions[i]] = 1
+    return np.array(result).reshape(-1, size)
 
 
 def main():
     num_units = 100
-    num_patterns = 30
+    num_patterns = 20
     patterns = active_patterns(num_units, num_patterns)  # Generating 10% active patterns
 
     for theta in THETA:
