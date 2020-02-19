@@ -80,29 +80,32 @@ class RestrictedBoltzmannMachine():
         n_samples = visible_trainset.shape[0]
 
         for it in range(n_iterations):
-
+        
+        # DONE
 	    # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
             # you may need to use the inference functions 'get_h_given_v' and 'get_v_given_h'.
             # note that inference methods returns both probabilities and activations (samples from probablities) and you may have to decide when to use what.
-
             print(it)
-            # Gibbs sampling
             
-            # Positive phase
-            v_0 = visible_trainset
-            p_h_given_v_0, h_0 = self.get_h_given_v(v_0)
-
-            # Negative phase
-            p_v_given_h_1, v_1 = self.get_v_given_h(h_0)
-            p_h_given_v_1, h_1 = self.get_h_given_v(v_1)
+            # Gibbs sampling in minibatches 
+            for batch_start in range(0, n_samples, self.batch_size):
+                batch_end = min(batch_start + self.batch_size, n_samples)
             
-            
-            # [TODO TASK 4.1] update the parameters using function 'update_params'
-            
-            # Update parameters
-            self.update_params(v_0, p_h_given_v_0, p_v_given_h_1, p_h_given_v_1)
-            
-            # visualize once in a while when visible layer is input images
+                # Positive phase
+                v_0 = visible_trainset[batch_start:batch_end]
+                p_h_given_v_0, h_0 = self.get_h_given_v(v_0)
+    
+                # Negative phase
+                p_v_given_h_1, v_1 = self.get_v_given_h(h_0)
+                p_h_given_v_1, h_1 = self.get_h_given_v(v_1)
+                
+                # DONE
+                # [TODO TASK 4.1] update the parameters using function 'update_params'
+                
+                # Update parameters
+                self.update_params(v_0, p_h_given_v_0, p_v_given_h_1, p_h_given_v_1)
+                
+                # visualize once in a while when visible layer is input images
             
             if it % self.rf["period"] == 0 and self.is_bottom:
                 
@@ -197,8 +200,20 @@ class RestrictedBoltzmannMachine():
             to get activities. The probabilities as well as activities can then be concatenated back into a normal visible layer.
             """
 
+            # DONE
             # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
             # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
+            
+            support = hidden_minibatch @ self.weight_vh.T + self.bias_v
+            
+            # create arrays
+            p_v_given_h = np.ndarray(shape=support.shape)
+            s = np.ndarray(shape=support.shape)
+            
+            p_v_given_h[:, :-self.n_labels] = sigmoid(support[:, :-self.n_labels])
+            s[:, :-self.n_labels] = sample_binary(p_v_given_h[:, :-self.n_labels])
+            p_v_given_h[:, -self.n_labels:] = softmax(support[:, -self.n_labels:])
+            s[:, -self.n_labels:] = sample_categorical(p_v_given_h[:, -self.n_labels:])
             
             pass
             
@@ -240,9 +255,13 @@ class RestrictedBoltzmannMachine():
 
         n_samples = visible_minibatch.shape[0]
 
+        # DONE
         # [TODO TASK 4.2] perform same computation as the function 'get_h_given_v' but with directed connections (replace the zeros below) 
         
-        return np.zeros((n_samples,self.ndim_hidden)), np.zeros((n_samples,self.ndim_hidden))
+        p_h_given_v_dir = sigmoid(visible_minibatch @ self.weight_v_to_h + self.bias_h)
+        h = sample_binary(p_h_given_v_dir)
+    
+        return p_h_given_v_dir, h
 
 
     def get_v_given_h_dir(self,hidden_minibatch):
@@ -272,19 +291,22 @@ class RestrictedBoltzmannMachine():
             to get activities. The probabilities as well as activities can then be concatenated back into a normal visible layer.
             """
             
+            # DONE
             # [TODO TASK 4.2] Note that even though this function performs same computation as 'get_v_given_h' but with directed connections,
             # this case should never be executed : when the RBM is a part of a DBN and is at the top, it will have not have directed connections.
             # Appropriate code here is to raise an error (replace pass below)
             
+            print("ERROR: No directed connections")
             pass
             
         else:
                         
-            # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)             
-
-            pass
+            # DONE
+            # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)                         
+            p_v_given_h_dir = sigmoid(hidden_minibatch @ self.weight_h_to_v.T + self.bias_v)
+            s = sample_binary(p_v_given_h_dir)
             
-        return np.zeros((n_samples,self.ndim_visible)), np.zeros((n_samples,self.ndim_visible))        
+        return p_v_given_h_dir, s       
         
     def update_generate_params(self,inps,trgs,preds):
         
