@@ -105,16 +105,13 @@ class RestrictedBoltzmannMachine():
                 # Update parameters
                 self.update_params(v_0, p_h_given_v_0, p_v_given_h_1, p_h_given_v_1)
                 
-                # visualize once in a while when visible layer is input images
             
+            # visualize once in a while when visible layer is input images
             if it % self.rf["period"] == 0 and self.is_bottom:
-                
                 viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=it, grid=self.rf["grid"])
 
             # print progress
-            
             if it % self.print_period == 0 :
-
                 print ("iteration=%7d recon_loss=%4.4f"%(it, np.linalg.norm(visible_trainset - visible_trainset)))
         
         return
@@ -206,10 +203,11 @@ class RestrictedBoltzmannMachine():
             
             support = hidden_minibatch @ self.weight_vh.T + self.bias_v
             
-            # create arrays
+            # Create arrays
             p_v_given_h = np.ndarray(shape=support.shape)
             s = np.ndarray(shape=support.shape)
             
+            # Compute probabilities only for visible layer
             p_v_given_h[:, :-self.n_labels] = sigmoid(support[:, :-self.n_labels])
             s[:, :-self.n_labels] = sample_binary(p_v_given_h[:, :-self.n_labels])
             p_v_given_h[:, -self.n_labels:] = softmax(support[:, -self.n_labels:])
