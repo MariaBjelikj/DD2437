@@ -220,3 +220,7 @@ fabric.properties
 
 # .mp4 files
 *.mp4
+Assignment4/code/Videos/
+
+# MacOS files
+.DS_Store
