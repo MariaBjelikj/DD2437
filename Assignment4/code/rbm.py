@@ -1,4 +1,5 @@
 from util import *
+from tqdm import tqdm
 
 
 class RestrictedBoltzmannMachine:
@@ -72,32 +73,37 @@ class RestrictedBoltzmannMachine:
 
         n_samples = visible_trainset.shape[0]
 
-        for it in range(n_iterations):
+        for it in tqdm(range(n_iterations)):
 
             # DONE
             # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1. you may need to
             #  use the inference functions 'get_h_given_v' and 'get_v_given_h'. note that inference methods returns
             #  both probabilities and activations (samples from probablities) and you may have to decide when to use
             #  what.
-            print(it)
+
 
             # Gibbs sampling in minibatches 
-            for batch_start in range(0, n_samples, self.batch_size):
-                batch_end = min(batch_start + self.batch_size, n_samples)
+            #for batch_start in range(0, n_samples, self.batch_size):
+            #batch_end = min(batch_start + self.batch_size, n_samples)
 
-                # Positive phase
-                v_0 = visible_trainset[batch_start:batch_end]
-                p_h_given_v_0, h_0 = self.get_h_given_v(v_0)
+            # Positive phase
+            #v_0 = visible_trainset[batch_start:batch_end]
+            "TODO: CATHERINE'S CODE --> MAKE IT FASTER AND IT WORKS, TAKE A TIME TO UNDERSTAND"
+            index_init = int(it % (n_samples/self.batch_size))
+            index_stop = int((index_init+1)*self.batch_size)
+            v_0 = visible_trainset[index_init*self.batch_size:index_stop, :]
+            
+            p_h_given_v_0, h_0 = self.get_h_given_v(v_0)
 
-                # Negative phase
-                p_v_given_h_1, v_1 = self.get_v_given_h(h_0)
-                p_h_given_v_1, h_1 = self.get_h_given_v(v_1)
+            # Negative phase
+            p_v_given_h_1, v_1 = self.get_v_given_h(h_0)
+            p_h_given_v_1, h_1 = self.get_h_given_v(v_1)
 
-                # DONE
-                # [TODO TASK 4.1] update the parameters using function 'update_params'
+            # DONE
+            # [TODO TASK 4.1] update the parameters using function 'update_params'
 
-                # Update parameters
-                self.update_params(v_0, p_h_given_v_0, p_v_given_h_1, p_h_given_v_1)
+            # Update parameters
+            self.update_params(v_0, p_h_given_v_0, p_v_given_h_1, p_h_given_v_1)
 
             # visualize once in a while when visible layer is input images
             if it % self.rf["period"] == 0 and self.is_bottom:
@@ -129,10 +135,10 @@ class RestrictedBoltzmannMachine:
         #  update the weight and bias parameters
         # equation 9
 
-        self.delta_bias_v += self.learning_rate * (np.sum(v_0 - v_k, axis=0))
-        self.delta_weight_vh += self.learning_rate * ((v_0.T @ h_0) - (v_k.T @ h_k))
-        self.delta_bias_h += self.learning_rate * (np.sum(h_0 - h_k, axis=0))
-
+        self.delta_bias_v = self.learning_rate * (np.sum(v_0 - v_k, axis=0))
+        self.delta_weight_vh = self.learning_rate * ((v_0.T @ h_0) - (v_k.T @ h_k))
+        self.delta_bias_h = self.learning_rate * (np.sum(h_0 - h_k, axis=0))
+        
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
         self.bias_h += self.delta_bias_h
@@ -289,7 +295,7 @@ class RestrictedBoltzmannMachine:
             # this case should never be executed : when the RBM is a part of a DBN and is at
             # the top, it will have not have directed connections.
             # Appropriate code here is to raise an error (replace pass below)
-
+            
             print("ERROR: No directed connections")
             pass
 
