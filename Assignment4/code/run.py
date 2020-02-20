@@ -2,7 +2,7 @@ from util import *
 from rbm import RestrictedBoltzmannMachine
 from dbn import DeepBeliefNet
 
-ITERATIONS = 10
+ITERATIONS = 9
 
 if __name__ == "__main__":
 

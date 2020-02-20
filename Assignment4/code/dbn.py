@@ -1,7 +1,7 @@
 from util import *
 from rbm import RestrictedBoltzmannMachine
 import numpy as np
-
+from tqdm import tqdm
 
 class DeepBeliefNet:
     """
@@ -70,12 +70,20 @@ class DeepBeliefNet:
         # and read out the labels (replace pass below and 'predicted_lbl' to your predicted labels).
         # NOTE : inferring entire train/test set may require too much compute memory (depends on
         # your system). In that case, divide into mini-batches.
+        
 
-        for _ in range(self.n_gibbs_recog):
-            pass
+        h_ = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis)[1] 
+        
+        h_2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(h_)[1] 
+        
+        h_concatenate = np.concatenate((h_2, lbl), axis=1)
 
-        predicted_lbl = np.zeros(true_lbl.shape)
+        for _ in tqdm(range(self.n_gibbs_recog)):
+            h_3 = self.rbm_stack["pen+lbl--top"].get_h_given_v(h_concatenate)[1] 
+            predicted_label = self.rbm_stack["pen+lbl--top"].get_v_given_h(h_3)[1] 
+            
 
+        predicted_lbl = predicted_label[:, -true_lbl.shape[1]:]
         print("accuracy = %.2f%%" % (100. * np.mean(np.argmax(predicted_lbl, axis=1) == np.argmax(true_lbl, axis=1))))
 
         return
