@@ -1,5 +1,6 @@
 from util import *
 from rbm import RestrictedBoltzmannMachine
+import numpy as np
 
 
 class DeepBeliefNet:
@@ -137,13 +138,14 @@ class DeepBeliefNet:
             self.loadfromfile_rbm(loc="trained_rbm", name="pen+lbl--top")
 
         except IOError:
-
+            # DONE
             # [TODO TASK 4.2] use CD-1 to train all RBMs greedily
-
+            
             print("training vis--hid")
             """ 
             CD-1 training for vis--hid 
             """
+            self.rbm_stack["vis--hid"].cd1(vis_trainset, n_iterations) ##### DONE 
             self.savetofile_rbm(loc="trained_rbm", name="vis--hid")
 
             print("training hid--pen")
@@ -151,6 +153,8 @@ class DeepBeliefNet:
             """ 
             CD-1 training for hid--pen 
             """
+            h_ = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_trainset)[1] ##### DONE             
+            self.rbm_stack["hid--pen"].cd1(h_, n_iterations) ##### DONE 
             self.savetofile_rbm(loc="trained_rbm", name="hid--pen")
 
             print("training pen+lbl--top")
@@ -158,6 +162,9 @@ class DeepBeliefNet:
             """ 
             CD-1 training for pen+lbl--top 
             """
+            h_2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(h_)[1] ##### DONE 
+            h_concatenate = np.concatenate((h_2, lbl_trainset), axis=1) #### DONE
+            self.rbm_stack["pen+lbl--top"].cd1(h_concatenate, n_iterations) #### DONE
             self.savetofile_rbm(loc="trained_rbm", name="pen+lbl--top")
 
         return
