@@ -8,7 +8,7 @@ files = glob.glob('/home/lucas/Documents/KTH/Courses/Artificial Neural Networks/
 for f in files:
     os.remove(f)
 
-np.random.seed(12)
+np.random.seed(21)
 
 ITERATIONS = 5001
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     # rbm.cd1(visible_trainset=train_imgs, n_iterations=ITERATIONS)
 
-    ''' deep- belief net '''
+    ''' deep-belief net '''
 
     print("\nStarting a Deep Belief Net..")
 
@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
     dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=ITERATIONS)
 
-    dbn.recognize(train_imgs, train_lbls)
+    #dbn.recognize(train_imgs, train_lbls)
 
     dbn.recognize(test_imgs, test_lbls)
 
