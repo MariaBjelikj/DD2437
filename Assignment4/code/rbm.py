@@ -72,6 +72,7 @@ class RestrictedBoltzmannMachine:
         print("learning CD1")
 
         n_samples = visible_trainset.shape[0]
+        loss_list = []
 
         for it in tqdm(range(n_iterations)):
 
@@ -88,7 +89,7 @@ class RestrictedBoltzmannMachine:
 
             # Positive phase
             #v_0 = visible_trainset[batch_start:batch_end]
-            "TODO: CATHERINE'S CODE --> MADE IT FASTER AND IT WORKS, TAKE A TIME TO UNDERSTAND"
+            # TODO: CATHERINE'S CODE --> MADE IT FASTER AND IT WORKS, TAKE A TIME TO UNDERSTAND
             index_init = int(it % (n_samples/self.batch_size))
             index_stop = int((index_init+1)*self.batch_size)
             v_0 = visible_trainset[index_init*self.batch_size:index_stop, :]
@@ -111,16 +112,17 @@ class RestrictedBoltzmannMachine:
                        it=it, grid=self.rf["grid"])
                 
             # print progress
+            # DONE: LOSS FUNCTION IMPLEMENTED
+            #for img in visible_trainset:
+            ## Maybe we should use probs when reconstruction. Now it is using binary.
+            # temp.append(self.get_v_given_h(self.get_h_given_v(img)[1])[0])
+            loss_function = np.linalg.norm(v_0 - v_1)
+            loss_list.append(loss_function)
+
             if it % self.print_period == 0:
-                # DONE: LOSS FUNCTION IMPLEMENTED 
-                #for img in visible_trainset:
-                    ## Maybe we should use probs when reconstruction. Now it is using binary.
-                    #temp.append(self.get_v_given_h(self.get_h_given_v(img)[1])[0])
-                loss_function = np.linalg.norm(v_0 - v_1)
-                
                 print("iteration=%7d recon_loss=%4.4f" % (it, loss_function))
 
-        return
+        return loss_list
 
     def update_params(self, v_0, h_0, v_k, h_k):
 

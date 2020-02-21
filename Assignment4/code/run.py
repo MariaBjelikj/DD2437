@@ -3,6 +3,7 @@ from rbm import RestrictedBoltzmannMachine
 from dbn import DeepBeliefNet
 import os
 import glob
+import matplotlib.pyplot as plt
 
 files = glob.glob('/home/lucas/Documents/KTH/Courses/Artificial Neural Networks/Assignments/DD2437/Assignment4/code/trained_rbm/*')
 for f in files:
@@ -10,7 +11,7 @@ for f in files:
 
 np.random.seed(12)
 
-ITERATIONS = 5001
+ITERATIONS = 30001
 
 
 if __name__ == "__main__":
@@ -22,34 +23,39 @@ if __name__ == "__main__":
 
     print("\nStarting a Restricted Boltzmann Machine..")
 
-    # rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0] * image_size[1],
-    #                                  ndim_hidden=500,
-    #                                  is_bottom=True,
-    #                                  image_size=image_size,
-    #                                  is_top=False,
-    #                                  n_labels=10,
-    #                                  batch_size=10
-    #                                  )
+    rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0] * image_size[1],
+                                     ndim_hidden=500,
+                                     is_bottom=True,
+                                     image_size=image_size,
+                                     is_top=False,
+                                     n_labels=10,
+                                     batch_size=10
+                                     )
 
-    # rbm.cd1(visible_trainset=train_imgs, n_iterations=ITERATIONS)
+    loss_list = rbm.cd1(visible_trainset=train_imgs, n_iterations=ITERATIONS)
+    plt.plot(range(len(loss_list)), loss_list)
+    plt.xlabel("Iteration")
+    plt.ylabel("Loss rate")
+    plt.show()
+
 
     ''' deep- belief net '''
 
-    print("\nStarting a Deep Belief Net..")
-
-    dbn = DeepBeliefNet(sizes={"vis": image_size[0] * image_size[1], "hid": 500, "pen": 500, "top": 2000, "lbl": 10},
-                        image_size=image_size,
-                        n_labels=10,
-                        batch_size=10
-                        )
-
-    ''' greedy layer-wise training '''
-
-    dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=ITERATIONS)
-
-    dbn.recognize(train_imgs, train_lbls)
-
-    dbn.recognize(test_imgs, test_lbls)
+    # print("\nStarting a Deep Belief Net..")
+    #
+    # dbn = DeepBeliefNet(sizes={"vis": image_size[0] * image_size[1], "hid": 500, "pen": 500, "top": 2000, "lbl": 10},
+    #                     image_size=image_size,
+    #                     n_labels=10,
+    #                     batch_size=10
+    #                     )
+    #
+    # ''' greedy layer-wise training '''
+    #
+    # dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=ITERATIONS)
+    #
+    # dbn.recognize(train_imgs, train_lbls)
+    #
+    # dbn.recognize(test_imgs, test_lbls)
 
     # for digit in range(10):
     #     digit_1hot = np.zeros(shape=(1, 10))
