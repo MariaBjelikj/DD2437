@@ -72,12 +72,9 @@ class DeepBeliefNet:
         # your system). In that case, divide into mini-batches.
         
 
-        h_ = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis)[1] 
-        
-        h_2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(h_)[1] 
-        
+        h_ = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis)[1]
+        h_2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(h_)[1]
         h_concatenate = np.concatenate((h_2, lbl), axis=1)
-
         predicted_label = h_concatenate
         for _ in tqdm(range(self.n_gibbs_recog)):
             h_3 = self.rbm_stack["pen+lbl--top"].get_h_given_v(predicted_label)[1] 
@@ -218,11 +215,19 @@ class DeepBeliefNet:
             for it in range(n_iterations):
 
                 # [TODO TASK 4.3] wake-phase : drive the network bottom to top using fixing the visible and label data.
+                h_ = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_trainset)[1]
+                h_2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(h_)[1]
+                h_concatenate = np.concatenate((h_2, lbl_trainset), axis=1)
 
                 # [TODO TASK 4.3] alternating Gibbs sampling in the top RBM for
                 #  k='n_gibbs_wakesleep' steps, also store neccessary information for learning this RBM.
+                predicted_label = h_concatenate
+                for _ in tqdm(range(self.n_gibbs_wakesleep)):
+                    h_3 = self.rbm_stack["pen+lbl--top"].get_h_given_v(predicted_label)[1]
+                    predicted_label = self.rbm_stack["pen+lbl--top"].get_v_given_h(h_3)[1]
 
                 # [TODO TASK 4.3] sleep phase : from the activities in the top RBM, drive the network top to bottom.
+                
 
                 # [TODO TASK 4.3] compute predictions : compute generative predictions
                 #  from wake-phase activations, and recognize predictions from sleep-phase activations.
@@ -231,6 +236,7 @@ class DeepBeliefNet:
 
                 # [TODO TASK 4.3] update generative parameters : here you will only use 'update_generate_params'
                 # method from rbm class.
+                RestrictedBoltzmannMachine.update_params()
 
                 # [TODO TASK 4.3] update parameters of top rbm : here you will only use 'update_params'
                 #  method from rbm class.
