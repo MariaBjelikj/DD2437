@@ -69,7 +69,7 @@ class RestrictedBoltzmannMachine:
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
 
-        print("learning CD1")
+        print("\nlearning CD1")
 
         n_samples = visible_trainset.shape[0]
         loss_list = []
@@ -116,13 +116,15 @@ class RestrictedBoltzmannMachine:
             #for img in visible_trainset:
             ## Maybe we should use probs when reconstruction. Now it is using binary.
             # temp.append(self.get_v_given_h(self.get_h_given_v(img)[1])[0])
-            loss_function = np.linalg.norm(v_0 - v_1)
-            loss_list.append(loss_function)
+            if it > (n_iterations * 0.9):   # Store last 10 percent
+                loss_function = np.linalg.norm(v_0 - v_1) / self.batch_size
+                loss_list.append(loss_function)
 
             if it % self.print_period == 0:
-                print("iteration=%7d recon_loss=%4.4f" % (it, loss_function))
+                loss_function = np.linalg.norm(v_0 - v_1) / self.batch_size
+                print("\niteration=%7d recon_loss=%4.4f" % (it, loss_function))
 
-        return loss_list
+        return np.array(loss_list).sum() / len(loss_list)
 
     def update_params(self, v_0, h_0, v_k, h_k):
 

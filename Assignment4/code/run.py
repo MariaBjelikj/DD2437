@@ -11,7 +11,7 @@ for f in files:
 
 np.random.seed(12)
 
-ITERATIONS = 30001
+ITERATIONS = 3001
 
 
 if __name__ == "__main__":
@@ -22,20 +22,25 @@ if __name__ == "__main__":
     ''' restricted boltzmann machine '''
 
     print("\nStarting a Restricted Boltzmann Machine..")
+    averages = []
+    batches = []
+    for i in range(10, 21):
 
-    rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0] * image_size[1],
-                                     ndim_hidden=500,
-                                     is_bottom=True,
-                                     image_size=image_size,
-                                     is_top=False,
-                                     n_labels=10,
-                                     batch_size=10
-                                     )
+        rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0] * image_size[1],
+                                         ndim_hidden=500,
+                                         is_bottom=True,
+                                         image_size=image_size,
+                                         is_top=False,
+                                         n_labels=10,
+                                         batch_size=i
+                                         )
 
-    loss_list = rbm.cd1(visible_trainset=train_imgs, n_iterations=ITERATIONS)
-    plt.plot(range(len(loss_list)), loss_list)
-    plt.xlabel("Iteration")
-    plt.ylabel("Loss rate")
+        averages.append(rbm.cd1(visible_trainset=train_imgs, n_iterations=ITERATIONS))
+        batches.append(i)
+    plt.plot(batches, averages)
+    plt.xticks(range(10, 21))
+    plt.xlabel("Batch Size")
+    plt.ylabel("Average Loss rate")
     plt.show()
 
 
