@@ -69,7 +69,7 @@ class RestrictedBoltzmannMachine:
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
 
-        print("\nlearning CD1")
+        # print("\nlearning CD1")
 
         n_samples = visible_trainset.shape[0]
         loss_list = []
@@ -120,9 +120,9 @@ class RestrictedBoltzmannMachine:
                 loss_function = np.linalg.norm(v_0 - v_1) / self.batch_size
                 loss_list.append(loss_function)
 
-            if it % self.print_period == 0:
-                loss_function = np.linalg.norm(v_0 - v_1) / self.batch_size
-                print("\niteration=%7d recon_loss=%4.4f" % (it, loss_function))
+            # if it % self.print_period == 0:
+            #     loss_function = np.linalg.norm(v_0 - v_1) / self.batch_size
+            #     print("\niteration=%7d recon_loss=%4.4f" % (it, loss_function))
 
         return np.array(loss_list).sum() / len(loss_list)
 

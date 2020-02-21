@@ -11,9 +11,6 @@ for f in files:
 
 np.random.seed(21)
 
-ITERATIONS = 3001
-
-
 if __name__ == "__main__":
 
     image_size = [28, 28]
@@ -24,24 +21,25 @@ if __name__ == "__main__":
     print("\nStarting a Restricted Boltzmann Machine..")
     averages = []
     batches = []
-    # for i in range(10, 21):
+    for i in range(10, 21):
 
-    #     rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0] * image_size[1],
-    #                                      ndim_hidden=500,
-    #                                      is_bottom=True,
-    #                                      image_size=image_size,
-    #                                      is_top=False,
-    #                                      n_labels=10,
-    #                                      batch_size=i
-    #                                      )
+        rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0] * image_size[1],
+                                         ndim_hidden=500,
+                                         is_bottom=True,
+                                         image_size=image_size,
+                                         is_top=False,
+                                         n_labels=10,
+                                         batch_size=20
+                                         )
 
-    #     averages.append(rbm.cd1(visible_trainset=train_imgs, n_iterations=ITERATIONS))
-    #     batches.append(i)
-    # plt.plot(batches, averages)
-    # plt.xticks(range(10, 21))
-    # plt.xlabel("Batch Size")
-    # plt.ylabel("Average Loss rate")
-    # plt.show()
+        iterations = int((train_imgs.shape[0] / 20) * i)  # Number of iterations from 10 to 20 epochs
+        averages.append(rbm.cd1(visible_trainset=train_imgs, n_iterations=iterations))
+        batches.append(i)
+    plt.plot(batches, averages)
+    plt.xticks(range(10, 21))
+    plt.xlabel("Epoch")
+    plt.ylabel("Average Loss rate")
+    plt.show()
 
 
     ''' deep-belief net '''
