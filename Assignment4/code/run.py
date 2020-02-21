@@ -3,6 +3,7 @@ from rbm import RestrictedBoltzmannMachine
 from dbn import DeepBeliefNet
 import os
 import glob
+import matplotlib.pyplot as plt
 
 files = glob.glob('/home/lucas/Documents/KTH/Courses/Artificial Neural Networks/Assignments/DD2437/Assignment4/code/trained_rbm/*')
 for f in files:
@@ -10,7 +11,7 @@ for f in files:
 
 np.random.seed(21)
 
-ITERATIONS = 5001
+ITERATIONS = 3001
 
 
 if __name__ == "__main__":
@@ -21,17 +22,27 @@ if __name__ == "__main__":
     ''' restricted boltzmann machine '''
 
     print("\nStarting a Restricted Boltzmann Machine..")
+    averages = []
+    batches = []
+    # for i in range(10, 21):
 
-    # rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0] * image_size[1],
-    #                                  ndim_hidden=500,
-    #                                  is_bottom=True,
-    #                                  image_size=image_size,
-    #                                  is_top=False,
-    #                                  n_labels=10,
-    #                                  batch_size=10
-    #                                  )
+    #     rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0] * image_size[1],
+    #                                      ndim_hidden=500,
+    #                                      is_bottom=True,
+    #                                      image_size=image_size,
+    #                                      is_top=False,
+    #                                      n_labels=10,
+    #                                      batch_size=i
+    #                                      )
 
-    # rbm.cd1(visible_trainset=train_imgs, n_iterations=ITERATIONS)
+    #     averages.append(rbm.cd1(visible_trainset=train_imgs, n_iterations=ITERATIONS))
+    #     batches.append(i)
+    # plt.plot(batches, averages)
+    # plt.xticks(range(10, 21))
+    # plt.xlabel("Batch Size")
+    # plt.ylabel("Average Loss rate")
+    # plt.show()
+
 
     ''' deep-belief net '''
 
