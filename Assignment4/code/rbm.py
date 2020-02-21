@@ -73,6 +73,9 @@ class RestrictedBoltzmannMachine:
 
         n_samples = visible_trainset.shape[0]
         loss_list = []
+        results_list = []
+        epoch_size = 3000
+        current_epoch = 10
 
         for it in tqdm(range(n_iterations)):
 
@@ -93,7 +96,7 @@ class RestrictedBoltzmannMachine:
             index_init = int(it % (n_samples/self.batch_size))
             index_stop = int((index_init+1)*self.batch_size)
             v_0 = visible_trainset[index_init*self.batch_size:index_stop, :]
-            
+
             p_h_given_v_0, h_0 = self.get_h_given_v(v_0)
 
             # Negative phase
@@ -110,21 +113,31 @@ class RestrictedBoltzmannMachine:
             if it % self.rf["period"] == 0 and self.is_bottom:
                 viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
                        it=it, grid=self.rf["grid"])
-                
+
             # print progress
             # DONE: LOSS FUNCTION IMPLEMENTED
             #for img in visible_trainset:
             ## Maybe we should use probs when reconstruction. Now it is using binary.
             # temp.append(self.get_v_given_h(self.get_h_given_v(img)[1])[0])
-            if it > (n_iterations * 0.9):   # Store last 10 percent
-                loss_function = np.linalg.norm(v_0 - v_1) / self.batch_size
-                loss_list.append(loss_function)
+
+            if int((epoch_size * current_epoch) - epoch_size) <= it < int((epoch_size * current_epoch)):
+                # Restoring image
+                hidden_restored = self.get_h_given_v(v_0)[1]
+                restored_image = self.get_v_given_h(hidden_restored)[1]
+
+                loss_function = np.linalg.norm(v_0 - restored_image) / self.batch_size
+                loss_list.append(loss_function)  # Store last 10 percent
+
+            elif it >= epoch_size * current_epoch:
+                results_list.append(np.array(loss_list).sum() / len(loss_list))  # Append avg loss epoch
+                loss_list = []  # Empty list
+                current_epoch += 1
 
             # if it % self.print_period == 0:
             #     loss_function = np.linalg.norm(v_0 - v_1) / self.batch_size
             #     print("\niteration=%7d recon_loss=%4.4f" % (it, loss_function))
 
-        return np.array(loss_list).sum() / len(loss_list)
+        return results_list
 
     def update_params(self, v_0, h_0, v_k, h_k):
 

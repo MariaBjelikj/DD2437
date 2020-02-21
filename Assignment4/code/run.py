@@ -9,7 +9,8 @@ files = glob.glob('/home/lucas/Documents/KTH/Courses/Artificial Neural Networks/
 for f in files:
     os.remove(f)
 
-np.random.seed(21)
+# np.random.seed(21)
+ITERATIONS = 60001
 
 if __name__ == "__main__":
 
@@ -19,28 +20,24 @@ if __name__ == "__main__":
     ''' restricted boltzmann machine '''
 
     print("\nStarting a Restricted Boltzmann Machine..")
-    averages = []
-    batches = []
-    for i in range(10, 21):
 
-        rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0] * image_size[1],
-                                         ndim_hidden=500,
-                                         is_bottom=True,
-                                         image_size=image_size,
-                                         is_top=False,
-                                         n_labels=10,
-                                         batch_size=20
-                                         )
+    # Iterating over the epochs
 
-        iterations = int((train_imgs.shape[0] / 20) * i)  # Number of iterations from 10 to 20 epochs
-        averages.append(rbm.cd1(visible_trainset=train_imgs, n_iterations=iterations))
-        batches.append(i)
-    plt.plot(batches, averages)
+    rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0] * image_size[1],
+                                     ndim_hidden=200,
+                                     is_bottom=True,
+                                     image_size=image_size,
+                                     is_top=False,
+                                     n_labels=10,
+                                     batch_size=20
+                                     )
+
+    averages = rbm.cd1(visible_trainset=train_imgs, n_iterations=ITERATIONS)
+    plt.plot(range(10, 21), averages)
     plt.xticks(range(10, 21))
     plt.xlabel("Epoch")
     plt.ylabel("Average Loss rate")
     plt.show()
-
 
     ''' deep-belief net '''
 
