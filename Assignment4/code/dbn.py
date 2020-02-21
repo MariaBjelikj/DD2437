@@ -78,8 +78,9 @@ class DeepBeliefNet:
         
         h_concatenate = np.concatenate((h_2, lbl), axis=1)
 
+        predicted_label = h_concatenate
         for _ in tqdm(range(self.n_gibbs_recog)):
-            h_3 = self.rbm_stack["pen+lbl--top"].get_h_given_v(h_concatenate)[1] 
+            h_3 = self.rbm_stack["pen+lbl--top"].get_h_given_v(predicted_label)[1] 
             predicted_label = self.rbm_stack["pen+lbl--top"].get_v_given_h(h_3)[1] 
             
 

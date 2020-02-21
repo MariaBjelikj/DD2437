@@ -1,8 +1,17 @@
 from util import *
 from rbm import RestrictedBoltzmannMachine
 from dbn import DeepBeliefNet
+import os
+import glob
 
-ITERATIONS = 9
+files = glob.glob('/home/lucas/Documents/KTH/Courses/Artificial Neural Networks/Assignments/DD2437/Assignment4/code/trained_rbm/*')
+for f in files:
+    os.remove(f)
+
+np.random.seed(12)
+
+ITERATIONS = 5001
+
 
 if __name__ == "__main__":
 
@@ -31,7 +40,7 @@ if __name__ == "__main__":
     dbn = DeepBeliefNet(sizes={"vis": image_size[0] * image_size[1], "hid": 500, "pen": 500, "top": 2000, "lbl": 10},
                         image_size=image_size,
                         n_labels=10,
-                        batch_size=15
+                        batch_size=10
                         )
 
     ''' greedy layer-wise training '''

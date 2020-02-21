@@ -88,7 +88,7 @@ class RestrictedBoltzmannMachine:
 
             # Positive phase
             #v_0 = visible_trainset[batch_start:batch_end]
-            "TODO: CATHERINE'S CODE --> MAKE IT FASTER AND IT WORKS, TAKE A TIME TO UNDERSTAND"
+            "TODO: CATHERINE'S CODE --> MADE IT FASTER AND IT WORKS, TAKE A TIME TO UNDERSTAND"
             index_init = int(it % (n_samples/self.batch_size))
             index_stop = int((index_init+1)*self.batch_size)
             v_0 = visible_trainset[index_init*self.batch_size:index_stop, :]
@@ -109,10 +109,16 @@ class RestrictedBoltzmannMachine:
             if it % self.rf["period"] == 0 and self.is_bottom:
                 viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
                        it=it, grid=self.rf["grid"])
-
+                
             # print progress
             if it % self.print_period == 0:
-                print("iteration=%7d recon_loss=%4.4f" % (it, np.linalg.norm(visible_trainset - visible_trainset)))
+                # DONE: LOSS FUNCTION IMPLEMENTED 
+                #for img in visible_trainset:
+                    ## Maybe we should use probs when reconstruction. Now it is using binary.
+                    #temp.append(self.get_v_given_h(self.get_h_given_v(img)[1])[0])
+                loss_function = np.linalg.norm(v_0 - v_1)
+                
+                print("iteration=%7d recon_loss=%4.4f" % (it, loss_function))
 
         return
 
