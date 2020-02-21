@@ -145,9 +145,9 @@ class RestrictedBoltzmannMachine:
         #  update the weight and bias parameters
         # equation 9
 
-        self.delta_bias_v = self.learning_rate * self.momentum*(np.sum(v_0 - v_k, axis=0))/v_0.shape[0]
+        self.delta_bias_v = self.learning_rate *(np.sum(v_0 - v_k, axis=0))/v_0.shape[0]
         self.delta_weight_vh = self.learning_rate * ((v_0.T @ h_0) - (v_k.T @ h_k))
-        self.delta_bias_h = self.learning_rate * self.momentum*(np.sum(h_0 - h_k, axis=0))/v_0.shape[0]
+        self.delta_bias_h = self.learning_rate *(np.sum(h_0 - h_k, axis=0))/v_0.shape[0]
 
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
@@ -314,7 +314,7 @@ class RestrictedBoltzmannMachine:
             # DONE
             # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but
             #  with directed connections (replace the pass and zeros below)
-            p_v_given_h_dir = sigmoid(hidden_minibatch @ self.weight_h_to_v.T + self.bias_v)
+            p_v_given_h_dir = sigmoid(hidden_minibatch @ self.weight_h_to_v + self.bias_v)
             s = sample_binary(p_v_given_h_dir)
 
         return p_v_given_h_dir, s

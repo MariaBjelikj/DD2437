@@ -42,7 +42,7 @@ class DeepBeliefNet:
         self.sizes = sizes
         self.image_size = image_size
         self.batch_size = batch_size
-        self.n_gibbs_recog = 15
+        self.n_gibbs_recog = 1
         self.n_gibbs_gener = 200
         self.n_gibbs_wakesleep = 5
         self.print_period = 2000
@@ -111,18 +111,22 @@ class DeepBeliefNet:
         # [TODO TASK 4.2] fix the label in the label layer and run alternating Gibbs sampling
         #  in the top RBM. From the top RBM, drive the network \
         # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
+  
         
-        vis_image = np.random.rand(n_sample, self.sizes["vis"])   
-                
-        predicted_label = self.rbm_stack["pen+lbl--top"].get_v_given_h(lbl)[1]
-        h_3 = self.rbm_stack["pen+lbl--top"].get_h_given_v(predicted_label)[1]
-        predicted_label = np.concatenate((h_3, lbl), axis=1)
-        for _ in tqdm(range(self.n_gibbs_recog)):        
-            h_3 = self.rbm_stack["pen+lbl--top"].get_h_given_v(predicted_label)[1]
-            predicted_label = self.rbm_stack["pen+lbl--top"].get_v_given_h(h_3)[1]
-            p_ = predicted_label[:, -true_lbl.shape[1]:]    
-            p_2 = self.rbm_stack["hid--pen"].get_v_given_h_dir(p_)[1] 
-            vis = self.rbm_stack["vis--hid"].get_h_given_v_dir(p_2)[1]                       
+        vis_ = np.random.choice([0,1], self.sizes['vis']).reshape(-1,self.sizes['vis'])
+        #vis_ = np.random.randn(n_sample, self.sizes['vis'])  
+        h_ = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_)[1] 
+        h_2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(h_)[1] 
+        h_concatenate = np.concatenate((h_2, lbl), axis=1)
+
+        predicted_label = h_concatenate
+        for _ in tqdm(range(self.n_gibbs_gener)):
+            h_3 = self.rbm_stack["pen+lbl--top"].get_h_given_v(predicted_label)[1] 
+            predicted_label = self.rbm_stack["pen+lbl--top"].get_v_given_h(h_3)[1] 
+            predicted_label[:, -10:] = lbl[:,:]
+            v_ = predicted_label[:, :-10]
+            v_2 = self.rbm_stack["hid--pen"].get_v_given_h_dir(v_)[1] 
+            vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(v_2)[1]                
 
             records.append([ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
                                       interpolation=None)])
