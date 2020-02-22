@@ -3,6 +3,7 @@ from rbm import RestrictedBoltzmannMachine
 import numpy as np
 from tqdm import tqdm
 
+
 class DeepBeliefNet:
     """
     For more details : Hinton, Osindero, Teh (2006). A fast learning algorithm for deep belief nets. https://www.cs.toronto.edu/~hinton/absps/fastnc.pdf
@@ -43,7 +44,7 @@ class DeepBeliefNet:
         self.image_size = image_size
         self.batch_size = batch_size
         self.n_gibbs_recog = 15
-        self.n_gibbs_gener = 200
+        self.n_gibbs_gener = 600
         self.n_gibbs_wakesleep = 5
         self.print_period = 2000
 
@@ -70,15 +71,13 @@ class DeepBeliefNet:
         # and read out the labels (replace pass below and 'predicted_lbl' to your predicted labels).
         # NOTE : inferring entire train/test set may require too much compute memory (depends on
         # your system). In that case, divide into mini-batches.
-        
 
         hidden_activation = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis)[1]
         pen_actiavtion = self.rbm_stack["hid--pen"].get_h_given_v_dir(hidden_activation)[1]
         pen_lbl_activation = np.concatenate((pen_actiavtion, lbl), axis=1)
         for _ in tqdm(range(self.n_gibbs_recog)):
-            top_activation = self.rbm_stack["pen+lbl--top"].get_h_given_v(pen_lbl_activation)[1] 
-            pen_lbl_activation = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_activation)[1] 
-            
+            top_activation = self.rbm_stack["pen+lbl--top"].get_h_given_v(pen_lbl_activation)[1]
+            pen_lbl_activation = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_activation)[1]
 
         predicted_lbl = pen_lbl_activation[:, -true_lbl.shape[1]:]
         print("accuracy = %.2f%%" % (100. * np.mean(np.argmax(predicted_lbl, axis=1) == np.argmax(true_lbl, axis=1))))
@@ -107,27 +106,28 @@ class DeepBeliefNet:
         # [TODO TASK 4.2] fix the label in the label layer and run alternating Gibbs sampling
         #  in the top RBM. From the top RBM, drive the network \
         # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
-  
-        
-        vis_ = np.random.choice([0,1], self.sizes['vis']).reshape(-1,self.sizes['vis'])
-        #vis_ = np.random.randn(n_sample, self.sizes['vis'])  
-        hidden_activation = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_)[1] 
-        pen_activation = self.rbm_stack["hid--pen"].get_h_given_v_dir(hidden_activation)[1] 
+
+        vis_ = np.random.choice([0, 1], self.sizes['vis']).reshape(-1, self.sizes['vis'])
+        # vis_ = np.random.randn(n_sample, self.sizes['vis'])
+        # vis_[vis_ > 1] = 1
+        # vis_[vis_ < 0] = 0
+
+        hidden_activation = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_)[1]
+        pen_activation = self.rbm_stack["hid--pen"].get_h_given_v_dir(hidden_activation)[1]
         pen_lbl_activation = np.concatenate((pen_activation, lbl), axis=1)
 
         for _ in tqdm(range(self.n_gibbs_gener)):
-            for _2 in range(self.n_gibbs_recog):
-                top_activation = self.rbm_stack["pen+lbl--top"].get_h_given_v(pen_lbl_activation)[1] 
-                pen_lbl_activation = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_activation)[1] 
-            pen_lbl_activation[:, -10:] = lbl[:,:]
-            pen_activation_top_bottom = pen_lbl_activation[:, :-10]
-            hidden_activation_top_bottom = self.rbm_stack["hid--pen"].get_v_given_h_dir(pen_activation_top_bottom)[1] 
-            vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(hidden_activation_top_bottom)[1]                
+            top_activation = self.rbm_stack["pen+lbl--top"].get_h_given_v(pen_lbl_activation)[1]
+            pen_lbl_activation = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_activation)[1]
+            pen_lbl_activation[:, -lbl.shape[1]:] = lbl[:, :]
+            pen_activation_top_bottom = pen_lbl_activation[:, :-lbl.shape[1]]
+            hidden_activation_top_bottom = self.rbm_stack["hid--pen"].get_v_given_h_dir(pen_activation_top_bottom)[1]
+            vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(hidden_activation_top_bottom)[1]
 
             records.append([ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
                                       interpolation=None)])
 
-        anim = stitch_video(fig, records).save("%s.generate%d.mp4" % ("Videos/" + name, np.argmax(true_lbl)))
+        stitch_video(fig, records).save("%s.generate%d.mp4" % ("Videos/" + name, np.argmax(true_lbl)))
 
         return
 
@@ -158,12 +158,12 @@ class DeepBeliefNet:
         except IOError:
             # DONE
             # [TODO TASK 4.2] use CD-1 to train all RBMs greedily
-            
+
             print("training vis--hid")
             """ 
             CD-1 training for vis--hid 
             """
-            self.rbm_stack["vis--hid"].cd1(vis_trainset, n_iterations) ##### DONE 
+            self.rbm_stack["vis--hid"].cd1(vis_trainset, n_iterations)  ##### DONE
             self.savetofile_rbm(loc="trained_rbm", name="vis--hid")
 
             print("training hid--pen")
@@ -171,8 +171,8 @@ class DeepBeliefNet:
             """ 
             CD-1 training for hid--pen 
             """
-            h_ = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_trainset)[1] ##### DONE             
-            self.rbm_stack["hid--pen"].cd1(h_, n_iterations) ##### DONE 
+            h_ = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_trainset)[1]  ##### DONE
+            self.rbm_stack["hid--pen"].cd1(h_, n_iterations)  ##### DONE
             self.savetofile_rbm(loc="trained_rbm", name="hid--pen")
 
             print("training pen+lbl--top")
@@ -180,9 +180,9 @@ class DeepBeliefNet:
             """ 
             CD-1 training for pen+lbl--top 
             """
-            h_2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(h_)[1] ##### DONE 
-            h_concatenate = np.concatenate((h_2, lbl_trainset), axis=1) #### DONE
-            self.rbm_stack["pen+lbl--top"].cd1(h_concatenate, n_iterations) #### DONE
+            h_2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(h_)[1]  ##### DONE
+            h_concatenate = np.concatenate((h_2, lbl_trainset), axis=1)  #### DONE
+            self.rbm_stack["pen+lbl--top"].cd1(h_concatenate, n_iterations)  #### DONE
             self.savetofile_rbm(loc="trained_rbm", name="pen+lbl--top")
 
         return
@@ -222,13 +222,17 @@ class DeepBeliefNet:
                 #  k='n_gibbs_wakesleep' steps, also store neccessary information for learning this RBM.
                 predicted_label = h_concatenate
                 for _ in tqdm(range(self.n_gibbs_wakesleep)):
-                    h_3 = self.rbm_stack["pen+lbl--top"].get_h_given_v(predicted_label)[1]
-                    predicted_label = self.rbm_stack["pen+lbl--top"].get_v_given_h(h_3)[1]
+                    top_activation = self.rbm_stack["pen+lbl--top"].get_h_given_v(predicted_label)[1]
+                    predicted_label = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_activation)[1]
 
                 # [TODO TASK 4.3] sleep phase : from the activities in the top RBM, drive the network top to bottom.
-                
+                    predicted_label[:, -10:] = lbl_trainset[:, :]
+                    pen_activation_top_bottom = predicted_label[:, :-10]
+                    hidden_activation_top_bottom = \
+                        self.rbm_stack["hid--pen"].get_v_given_h_dir(pen_activation_top_bottom)[1]
+                    vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(hidden_activation_top_bottom)[1]
 
-                # [TODO TASK 4.3] compute predictions : compute generative predictions
+                    # [TODO TASK 4.3] compute predictions : compute generative predictions
                 #  from wake-phase activations, and recognize predictions from sleep-phase activations.
                 # Note that these predictions will not alter the network activations, we use them
                 # only to learn the directed connections.
@@ -239,9 +243,11 @@ class DeepBeliefNet:
 
                 # [TODO TASK 4.3] update parameters of top rbm : here you will only use 'update_params'
                 #  method from rbm class.
+                RestrictedBoltzmannMachine.update_params()
 
                 # [TODO TASK 4.3] update generative parameters : here you will only use 'update_recognize_params'
                 #  method from rbm class.
+                RestrictedBoltzmannMachine.update_recognize_params()
 
                 if it % self.print_period == 0:
                     print("iteration=%7d" % it)

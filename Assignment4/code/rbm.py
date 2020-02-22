@@ -74,46 +74,46 @@ class RestrictedBoltzmannMachine:
         n_samples = visible_trainset.shape[0]
         loss_list = []
         results_list = []
-        epoch_size = int(n_iterations / 20)
+        elements = int(n_samples / self.batch_size)
+        epoch_size = int(n_iterations / self.batch_size)
         current_epoch = 10
 
-        for it in tqdm(range(n_iterations)):
+        for epoch in range(n_iterations):
+            for it in tqdm(range(elements)):
 
-            # DONE
-            # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1. you may need to
-            #  use the inference functions 'get_h_given_v' and 'get_v_given_h'. note that inference methods returns
-            #  both probabilities and activations (samples from probablities) and you may have to decide when to use
-            #  what.
+                # DONE
+                # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1. you may need to
+                #  use the inference functions 'get_h_given_v' and 'get_v_given_h'. note that inference methods returns
+                #  both probabilities and activations (samples from probablities) and you may have to decide when to use
+                #  what.
 
 
-            # Gibbs sampling in minibatches 
-            #for batch_start in range(0, n_samples, self.batch_size):
-            #batch_end = min(batch_start + self.batch_size, n_samples)
+                # Gibbs sampling in minibatches
+                #for batch_start in range(0, n_samples, self.batch_size):
+                #batch_end = min(batch_start + self.batch_size, n_samples)
 
-            # Positive phase
-            #v_0 = visible_trainset[batch_start:batch_end]
-            # TODO: CATHERINE'S CODE --> MADE IT FASTER AND IT WORKS, TAKE A TIME TO UNDERSTAND
-            index_init = int(it % (n_samples/self.batch_size))
-            index_stop = int((index_init+1)*self.batch_size)
-            v_0 = visible_trainset[index_init*self.batch_size:index_stop, :]
+                # Positive phase
+                #v_0 = visible_trainset[batch_start:batch_end]
+                index_init = int(it % elements)
+                index_stop = int((index_init + 1) * self.batch_size)
+                index_init *= self.batch_size
+                v_0 = visible_trainset[index_init:index_stop, :]
+                p_h_given_v_0, h_0 = self.get_h_given_v(v_0)
+                # Negative phase
+                p_v_given_h_1, v_1 = self.get_v_given_h(h_0)
+                p_h_given_v_0, h_1 = self.get_h_given_v(v_1)
 
-            p_h_given_v_0, h_0 = self.get_h_given_v(v_0)
+                # DONE
+                # [TODO TASK 4.1] update the parameters using function 'update_params'
 
-            # Negative phase
-            p_v_given_h_1, v_1 = self.get_v_given_h(h_0)
-            p_h_given_v_1, h_1 = self.get_h_given_v(v_1)
+                # Update parameters
+                #self.update_params(v_0, p_h_given_v_0, p_v_given_h_1, p_h_given_v_1)
+                self.update_params(v_0, h_0, v_1, h_1)
 
-            # DONE
-            # [TODO TASK 4.1] update the parameters using function 'update_params'
-
-            # Update parameters
-            #self.update_params(v_0, p_h_given_v_0, p_v_given_h_1, p_h_given_v_1)
-            self.update_params(v_0, h_0, v_1, h_1)
-
-            # visualize once in a while when visible layer is input images
-            if it % self.rf["period"] == 0 and self.is_bottom:
-                viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
-                       it=it, grid=self.rf["grid"])
+                # visualize once in a while when visible layer is input images
+                if it % self.rf["period"] == 0 and self.is_bottom:
+                    viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
+                           it=it, grid=self.rf["grid"])
 
             # print progress
             # DONE: LOSS FUNCTION IMPLEMENTED
@@ -121,23 +121,22 @@ class RestrictedBoltzmannMachine:
             ## Maybe we should use probs when reconstruction. Now it is using binary.
             # temp.append(self.get_v_given_h(self.get_h_given_v(img)[1])[0])
 
-            if int((epoch_size * current_epoch) - epoch_size) <= it < int((epoch_size * current_epoch)):
-                # Restoring image
-                hidden_restored = self.get_h_given_v(v_0)[1]
-                restored_image = self.get_v_given_h(hidden_restored)[1]
-
-                loss_function = np.linalg.norm(v_0 - restored_image) / self.batch_size
-                loss_list.append(loss_function)  # Store last 10 percent
-
-            elif it >= epoch_size * current_epoch:
-                # Last iteration before emptying the list the list
-                hidden_restored = self.get_h_given_v(v_0)[1]
-                restored_image = self.get_v_given_h(hidden_restored)[1]
-                loss_function = np.linalg.norm(v_0 - restored_image) / self.batch_size
-                loss_list.append(loss_function)  # Store last 10 percent
-                results_list.append(np.array(loss_list).sum() / len(loss_list))  # Append avg loss epoch
-                loss_list = []  # Empty list
-                current_epoch += 1
+            # if int((epoch_size * current_epoch) - epoch_size) <= it < int((epoch_size * current_epoch)):
+            #     # Restoring image
+            #     hidden_restored = self.get_h_given_v(v_0)[1]
+            #     restored_image = self.get_v_given_h(hidden_restored)[1]
+            #     loss_function = np.linalg.norm(v_0 - restored_image) / self.batch_size
+            #     loss_list.append(loss_function)  # Store last 10 percent
+            #
+            # elif it >= epoch_size * current_epoch:
+            #     # Last iteration before emptying the list the list
+            #     hidden_restored = self.get_h_given_v(v_0)[1]
+            #     restored_image = self.get_v_given_h(hidden_restored)[1]
+            #     loss_function = np.linalg.norm(v_0 - restored_image) / self.batch_size
+            #     loss_list.append(loss_function)  # Store last 10 percent
+            #     results_list.append(np.array(loss_list).sum() / len(loss_list))  # Append avg loss epoch
+            #     loss_list = []  # Empty list
+            #     current_epoch += 1
 
             # if it % self.print_period == 0:
             #     loss_function = np.linalg.norm(v_0 - v_1) / self.batch_size
@@ -164,9 +163,9 @@ class RestrictedBoltzmannMachine:
         #  update the weight and bias parameters
         # equation 9
 
-        self.delta_bias_v = self.learning_rate *(np.sum(v_0 - v_k, axis=0))/v_0.shape[0]
+        self.delta_bias_v = self.learning_rate * (np.sum(v_0 - v_k, axis=0)) # /v_0.shape[0]
         self.delta_weight_vh = self.learning_rate * ((v_0.T @ h_0) - (v_k.T @ h_k))
-        self.delta_bias_h = self.learning_rate *(np.sum(h_0 - h_k, axis=0))/v_0.shape[0]
+        self.delta_bias_h = self.learning_rate * (np.sum(h_0 - h_k, axis=0))  #/v_0.shape[0]
 
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
@@ -241,8 +240,8 @@ class RestrictedBoltzmannMachine:
 
             # Compute probabilities only for visible layer
             p_v_given_h[:, :-self.n_labels] = sigmoid(support[:, :-self.n_labels])
-            s[:, :-self.n_labels] = sample_binary(p_v_given_h[:, :-self.n_labels])
             p_v_given_h[:, -self.n_labels:] = softmax(support[:, -self.n_labels:])
+            s[:, :-self.n_labels] = sample_binary(p_v_given_h[:, :-self.n_labels])
             s[:, -self.n_labels:] = sample_categorical(p_v_given_h[:, -self.n_labels:])
 
         else:
@@ -324,7 +323,7 @@ class RestrictedBoltzmannMachine:
             # this case should never be executed : when the RBM is a part of a DBN and is at
             # the top, it will have not have directed connections.
             # Appropriate code here is to raise an error (replace pass below)
-        
+            print("ERROR: P(V|H) directed 'is_top' = True")
             pass
 
         else:
