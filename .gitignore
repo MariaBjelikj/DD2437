@@ -224,3 +224,8 @@ Assignment4/code/Videos/
 
 # MacOS files
 .DS_Store
+
+# Stored data
+trained_dbn/*
+trained_rbmn/*
+Assignment4/code/*.png

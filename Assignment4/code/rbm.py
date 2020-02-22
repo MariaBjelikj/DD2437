@@ -74,7 +74,7 @@ class RestrictedBoltzmannMachine:
         n_samples = visible_trainset.shape[0]
         loss_list = []
         results_list = []
-        epoch_size = 3000
+        epoch_size = int(n_iterations / 20)
         current_epoch = 10
 
         for it in tqdm(range(n_iterations)):
@@ -130,6 +130,11 @@ class RestrictedBoltzmannMachine:
                 loss_list.append(loss_function)  # Store last 10 percent
 
             elif it >= epoch_size * current_epoch:
+                # Last iteration before emptying the list the list
+                hidden_restored = self.get_h_given_v(v_0)[1]
+                restored_image = self.get_v_given_h(hidden_restored)[1]
+                loss_function = np.linalg.norm(v_0 - restored_image) / self.batch_size
+                loss_list.append(loss_function)  # Store last 10 percent
                 results_list.append(np.array(loss_list).sum() / len(loss_list))  # Append avg loss epoch
                 loss_list = []  # Empty list
                 current_epoch += 1
