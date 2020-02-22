@@ -226,6 +226,4 @@ Assignment4/code/Videos/
 .DS_Store
 
 # Stored data
-trained_dbn/*
-trained_rbmn/*
 Assignment4/code/*.png
