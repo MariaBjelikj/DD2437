@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 #     os.remove(f)
 
 np.random.seed(21)
-ITERATIONS = 60001
+ITERATIONS = 30001
 
 if __name__ == "__main__":
 
@@ -23,21 +23,21 @@ if __name__ == "__main__":
 
     # Iterating over the epochs
 
-    rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0] * image_size[1],
-                                     ndim_hidden=200,
-                                     is_bottom=True,
-                                     image_size=image_size,
-                                     is_top=False,
-                                     n_labels=10,
-                                     batch_size=20
-                                     )
+    # rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0] * image_size[1],
+    #                                  ndim_hidden=200,
+    #                                  is_bottom=True,
+    #                                  image_size=image_size,
+    #                                  is_top=False,
+    #                                  n_labels=10,
+    #                                  batch_size=20
+    #                                  )
 
-    averages = rbm.cd1(visible_trainset=train_imgs, n_iterations=ITERATIONS)
-    plt.plot(range(10, 21), averages)
-    plt.xticks(range(10, 21))
-    plt.xlabel("Epoch")
-    plt.ylabel("Average Loss rate")
-    plt.show()
+    # averages = rbm.cd1(visible_trainset=train_imgs, n_iterations=ITERATIONS)
+    # plt.plot(range(10, 21), averages)
+    # plt.xticks(range(10, 21))
+    # plt.xlabel("Epoch")
+    # plt.ylabel("Average Loss rate")
+    # plt.show()
 
     ''' deep-belief net '''
 

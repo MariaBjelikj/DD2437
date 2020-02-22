@@ -42,7 +42,7 @@ class DeepBeliefNet:
         self.sizes = sizes
         self.image_size = image_size
         self.batch_size = batch_size
-        self.n_gibbs_recog = 1
+        self.n_gibbs_recog = 15
         self.n_gibbs_gener = 200
         self.n_gibbs_wakesleep = 5
         self.print_period = 2000
@@ -72,16 +72,15 @@ class DeepBeliefNet:
         # your system). In that case, divide into mini-batches.
         
 
-        h_ = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis)[1]
-        h_2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(h_)[1]
-        h_concatenate = np.concatenate((h_2, lbl), axis=1)
-        predicted_label = h_concatenate
+        hidden_activation = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis)[1]
+        pen_actiavtion = self.rbm_stack["hid--pen"].get_h_given_v_dir(hidden_activation)[1]
+        pen_lbl_activation = np.concatenate((pen_actiavtion, lbl), axis=1)
         for _ in tqdm(range(self.n_gibbs_recog)):
-            h_3 = self.rbm_stack["pen+lbl--top"].get_h_given_v(predicted_label)[1] 
-            predicted_label = self.rbm_stack["pen+lbl--top"].get_v_given_h(h_3)[1] 
+            top_activation = self.rbm_stack["pen+lbl--top"].get_h_given_v(pen_lbl_activation)[1] 
+            pen_lbl_activation = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_activation)[1] 
             
 
-        predicted_lbl = predicted_label[:, -true_lbl.shape[1]:]
+        predicted_lbl = pen_lbl_activation[:, -true_lbl.shape[1]:]
         print("accuracy = %.2f%%" % (100. * np.mean(np.argmax(predicted_lbl, axis=1) == np.argmax(true_lbl, axis=1))))
 
         return
@@ -112,18 +111,18 @@ class DeepBeliefNet:
         
         vis_ = np.random.choice([0,1], self.sizes['vis']).reshape(-1,self.sizes['vis'])
         #vis_ = np.random.randn(n_sample, self.sizes['vis'])  
-        h_ = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_)[1] 
-        h_2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(h_)[1] 
-        h_concatenate = np.concatenate((h_2, lbl), axis=1)
+        hidden_activation = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_)[1] 
+        pen_activation = self.rbm_stack["hid--pen"].get_h_given_v_dir(hidden_activation)[1] 
+        pen_lbl_activation = np.concatenate((pen_activation, lbl), axis=1)
 
-        predicted_label = h_concatenate
         for _ in tqdm(range(self.n_gibbs_gener)):
-            h_3 = self.rbm_stack["pen+lbl--top"].get_h_given_v(predicted_label)[1] 
-            predicted_label = self.rbm_stack["pen+lbl--top"].get_v_given_h(h_3)[1] 
-            predicted_label[:, -10:] = lbl[:,:]
-            v_ = predicted_label[:, :-10]
-            v_2 = self.rbm_stack["hid--pen"].get_v_given_h_dir(v_)[1] 
-            vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(v_2)[1]                
+            for _2 in range(self.n_gibbs_recog):
+                top_activation = self.rbm_stack["pen+lbl--top"].get_h_given_v(pen_lbl_activation)[1] 
+                pen_lbl_activation = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_activation)[1] 
+            pen_lbl_activation[:, -10:] = lbl[:,:]
+            pen_activation_top_bottom = pen_lbl_activation[:, :-10]
+            hidden_activation_top_bottom = self.rbm_stack["hid--pen"].get_v_given_h_dir(pen_activation_top_bottom)[1] 
+            vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(hidden_activation_top_bottom)[1]                
 
             records.append([ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
                                       interpolation=None)])
