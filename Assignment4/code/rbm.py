@@ -107,7 +107,8 @@ class RestrictedBoltzmannMachine:
             # [TODO TASK 4.1] update the parameters using function 'update_params'
 
             # Update parameters
-            self.update_params(v_0, p_h_given_v_0, p_v_given_h_1, p_h_given_v_1)
+            #self.update_params(v_0, p_h_given_v_0, p_v_given_h_1, p_h_given_v_1)
+            self.update_params(v_0, h_0, v_1, h_1)
 
             # visualize once in a while when visible layer is input images
             if it % self.rf["period"] == 0 and self.is_bottom:
@@ -318,8 +319,7 @@ class RestrictedBoltzmannMachine:
             # this case should never be executed : when the RBM is a part of a DBN and is at
             # the top, it will have not have directed connections.
             # Appropriate code here is to raise an error (replace pass below)
-            
-            print("ERROR: No directed connections")
+        
             pass
 
         else:
