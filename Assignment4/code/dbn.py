@@ -210,47 +210,65 @@ class DeepBeliefNet:
         except IOError:
 
             self.n_samples = vis_trainset.shape[0]
+            n_labels = lbl_trainset.shape[1]
+            elements = int(self.n_samples / self.batch_size)
+            
+            for epoch in range(n_iterations):
+                for it in tqdm(range(elements)):
+                    
+                    index_init = int(it % elements)
+                    index_stop = int((index_init + 1) * self.batch_size)
+                    index_init *= self.batch_size
+                    visible_minibatch = vis_trainset[index_init * self.batch_size:index_stop, :]
+                    label_minibatch = lbl_trainset[index_init * self.batch_size:index_stop, :]
 
-            for it in range(n_iterations):
-
-                # [TODO TASK 4.3] wake-phase : drive the network bottom to top using fixing the visible and label data.
-                h_ = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_trainset)[1]
-                h_2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(h_)[1]
-                h_concatenate = np.concatenate((h_2, lbl_trainset), axis=1)
-
-                # [TODO TASK 4.3] alternating Gibbs sampling in the top RBM for
-                #  k='n_gibbs_wakesleep' steps, also store neccessary information for learning this RBM.
-                predicted_label = h_concatenate
-                for _ in tqdm(range(self.n_gibbs_wakesleep)):
-                    top_activation = self.rbm_stack["pen+lbl--top"].get_h_given_v(predicted_label)[1]
-                    predicted_label = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_activation)[1]
-
-                # [TODO TASK 4.3] sleep phase : from the activities in the top RBM, drive the network top to bottom.
-                    predicted_label[:, -10:] = lbl_trainset[:, :]
-                    pen_activation_top_bottom = predicted_label[:, :-10]
-                    hidden_activation_top_bottom = \
-                        self.rbm_stack["hid--pen"].get_v_given_h_dir(pen_activation_top_bottom)[1]
-                    vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(hidden_activation_top_bottom)[1]
-
+                    # [TODO TASK 4.3] wake-phase : drive the network bottom to top using fixing the visible and label data.
+                    lbl_hid_wake = self.rbm_stack['vis--hid'].get_h_given_v_dir(visible_minibatch)[1]
+                    lbl_pen_wake = self.rbm_stack['hid--pen'].get_h_given_v_dir(lbl_hid_wake)[1]
+                    lbl_pen = np.concatenate((lbl_pen_wake, label_minibatch), axis=1)
+                    lbl_wake = self.rbm_stack['pen+lbl--top'].get_h_given_v(lbl_pen)[1]
+                    
+                    # [TODO TASK 4.3] alternating Gibbs sampling in the top RBM for
+                    #  k='n_gibbs_wakesleep' steps, also store neccessary information for learning this RBM.
+                    lbl_neg = lbl_wake
+                    for _ in range(self.n_gibbs_wakesleep):
+                        lbl_pen_neg = self.rbm_stack['pen+lbl--top'].get_v_given_h(lbl_neg)[1]
+                        lbl_neg = self.rbm_stack['pen+lbl--top'].get_h_given_v(lbl_pen_neg)[1]
+                    
+                    # [TODO TASK 4.3] sleep phase : from the activities in the top RBM, drive the network top to bottom.
+                    lbl_pen_sleep = lbl_pen_neg[:, :-n_labels]
+                    p_hid_sleep, lbl_hid_sleep = self.rbm_stack['hid--pen'].get_v_given_h_dir(lbl_pen_sleep) 
+                    p_vis_sleep, lbl_vis_sleep = self.rbm_stack['vis--hid'].get_v_given_h_dir(lbl_hid_sleep)
+                    
                     # [TODO TASK 4.3] compute predictions : compute generative predictions
-                #  from wake-phase activations, and recognize predictions from sleep-phase activations.
-                # Note that these predictions will not alter the network activations, we use them
-                # only to learn the directed connections.
+                    #  from wake-phase activations, and recognize predictions from sleep-phase activations.
+                    # Note that these predictions will not alter the network activations, we use them
+                    # only to learn the directed connections.
+                    
+                    pred_lbl_hid_sleep = self.rbm_stack['vis--hid'].get_h_given_v_dir(p_vis_sleep)[1]
+                    pred_p_vis, pred_lbl_vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(lbl_hid_wake)
+                    pred_p_hid, pred_lbl_hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(lbl_pen_wake)
+                    
+                    # [TODO TASK 4.3] update generative parameters : here you will only use 'update_generate_params'
+                    # method from rbm class.
+                    self.rbm_stack['vis--hid'].update_generate_params(lbl_hid_wake, visible_minibatch, pred_p_vis)
+                    self.rbm_stack['hid--pen'].update_generate_params(lbl_pen_wake, lbl_hid_wake, pred_p_hid)
+                    
+                    # [TODO TASK 4.3] update parameters of top rbm : here you will only use 'update_params'
+                    #  method from rbm class.
+                    lbl_pen = np.concatenate((lbl_pen_wake, label_minibatch), axis=1)
+                    self.rbm_stack['pen+lbl--top'].update_params(lbl_pen, lbl_wake, lbl_pen_neg, lbl_neg)
+                    
+                    # [TODO TASK 4.3] update generative parameters : here you will only use 'update_recognize_params'
+                    #  method from rbm class.
+                    self.rbm_stack['hid--pen'].update_recognize_params(lbl_hid_sleep, lbl_pen_sleep, plbl_pen_sleep)
+                    self.rbm_stack['vis--hid'].update_recognize_params(p_vis_sleep, lbl_hid_sleep, pred_lbl_hid_sleep)
 
-                # [TODO TASK 4.3] update generative parameters : here you will only use 'update_generate_params'
-                # method from rbm class.
-                RestrictedBoltzmannMachine.update_params()
 
-                # [TODO TASK 4.3] update parameters of top rbm : here you will only use 'update_params'
-                #  method from rbm class.
-                RestrictedBoltzmannMachine.update_params()
+                    if it % self.print_period == 0:
+                        print("4.3 iteration=%7d" % it)
 
-                # [TODO TASK 4.3] update generative parameters : here you will only use 'update_recognize_params'
-                #  method from rbm class.
-                RestrictedBoltzmannMachine.update_recognize_params()
 
-                if it % self.print_period == 0:
-                    print("iteration=%7d" % it)
 
             self.savetofile_dbn(loc="trained_dbn", name="vis--hid")
             self.savetofile_dbn(loc="trained_dbn", name="hid--pen")
