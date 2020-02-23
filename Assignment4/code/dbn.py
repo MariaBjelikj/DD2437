@@ -219,8 +219,8 @@ class DeepBeliefNet:
                     index_init = int(it % elements)
                     index_stop = int((index_init + 1) * self.batch_size)
                     index_init *= self.batch_size
-                    visible_minibatch = vis_trainset[index_init * self.batch_size:index_stop, :]
-                    label_minibatch = lbl_trainset[index_init * self.batch_size:index_stop, :]
+                    visible_minibatch = vis_trainset[index_init:index_stop, :]
+                    label_minibatch = lbl_trainset[index_init:index_stop, :]
 
                     # [TODO TASK 4.3] wake-phase : drive the network bottom to top using fixing the visible and label data.
                     lbl_hid_wake = self.rbm_stack['vis--hid'].get_h_given_v_dir(visible_minibatch)[1]
