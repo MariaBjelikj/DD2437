@@ -245,6 +245,7 @@ class DeepBeliefNet:
                     # Note that these predictions will not alter the network activations, we use them
                     # only to learn the directed connections.
                     
+                    pred_lbl_pen_sleep = self.rbm_stack['hid--pen'].get_h_given_v_dir(lbl_hid_sleep)[1]
                     pred_lbl_hid_sleep = self.rbm_stack['vis--hid'].get_h_given_v_dir(p_vis_sleep)[1]
                     pred_p_vis, pred_lbl_vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(lbl_hid_wake)
                     pred_p_hid, pred_lbl_hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(lbl_pen_wake)
@@ -261,7 +262,7 @@ class DeepBeliefNet:
                     
                     # [TODO TASK 4.3] update generative parameters : here you will only use 'update_recognize_params'
                     #  method from rbm class.
-                    self.rbm_stack['hid--pen'].update_recognize_params(lbl_hid_sleep, lbl_pen_sleep, plbl_pen_sleep)
+                    self.rbm_stack['hid--pen'].update_recognize_params(lbl_hid_sleep, lbl_pen_sleep, pred_lbl_pen_sleep)
                     self.rbm_stack['vis--hid'].update_recognize_params(p_vis_sleep, lbl_hid_sleep, pred_lbl_hid_sleep)
 
 
