@@ -231,6 +231,7 @@ class DeepBeliefNet:
                     # [TODO TASK 4.3] alternating Gibbs sampling in the top RBM for
                     #  k='n_gibbs_wakesleep' steps, also store neccessary information for learning this RBM.
                     lbl_neg = lbl_wake
+                    lbl_pen_neg = 0
                     for _ in range(self.n_gibbs_wakesleep):
                         lbl_pen_neg = self.rbm_stack['pen+lbl--top'].get_v_given_h(lbl_neg)[1]
                         lbl_neg = self.rbm_stack['pen+lbl--top'].get_h_given_v(lbl_pen_neg)[1]
@@ -264,7 +265,6 @@ class DeepBeliefNet:
                     #  method from rbm class.
                     self.rbm_stack['hid--pen'].update_recognize_params(lbl_hid_sleep, lbl_pen_sleep, pred_lbl_pen_sleep)
                     self.rbm_stack['vis--hid'].update_recognize_params(p_vis_sleep, lbl_hid_sleep, pred_lbl_hid_sleep)
-
 
                     if it % self.print_period == 0:
                         print("4.3 iteration=%7d" % it)
