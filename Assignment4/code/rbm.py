@@ -60,7 +60,7 @@ class RestrictedBoltzmannMachine:
 
         return
 
-    def cd1(self, visible_trainset, n_iterations=100, plotting=True):
+    def cd1(self, visible_trainset, n_iterations=100, plotting=False):
 
         """Contrastive Divergence with k=1 full alternating Gibbs sampling
 
@@ -359,7 +359,7 @@ class RestrictedBoltzmannMachine:
         # DONE
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below)
         #  and update the weight and bias parameters.
-
+ 
         self.delta_weight_h_to_v = self.learning_rate * inps.T @ (trgs - preds)
         self.delta_bias_v = self.learning_rate * (np.sum(trgs - preds, axis=0))
 
