@@ -219,53 +219,68 @@ class DeepBeliefNet:
                     index_init = int(it % elements)
                     index_stop = int((index_init + 1) * self.batch_size)
                     index_init *= self.batch_size
-                    visible_minibatch = vis_trainset[index_init:index_stop, :]
-                    label_minibatch = lbl_trainset[index_init:index_stop, :]
+                    vis_minibatch = vis_trainset[index_init:index_stop, :]
+                    lbl_minibatch = lbl_trainset[index_init:index_stop, :]
 
                     # [TODO TASK 4.3] wake-phase : drive the network bottom to top using fixing the visible and label data.
-                    lbl_hid_wake = self.rbm_stack['vis--hid'].get_h_given_v_dir(visible_minibatch)[1]
-                    lbl_pen_wake = self.rbm_stack['hid--pen'].get_h_given_v_dir(lbl_hid_wake)[1]
-                    lbl_pen = np.concatenate((lbl_pen_wake, label_minibatch), axis=1)
-                    lbl_wake = self.rbm_stack['pen+lbl--top'].get_h_given_v(lbl_pen)[1]
+                    p_hid_wake, lbl_hid_wake = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis_minibatch)
+                    p_pen_wake, lbl_pen_wake = self.rbm_stack['hid--pen'].get_h_given_v_dir(lbl_hid_wake)
+                    #p_pen_wake, lbl_pen_wake = self.rbm_stack['hid--pen'].get_h_given_v_dir(p_hid_wake)
+                    lbl_pen = np.concatenate((lbl_pen_wake, lbl_minibatch), axis=1)
+                    p_wake, lbl_wake = self.rbm_stack['pen+lbl--top'].get_h_given_v(lbl_pen) 
+                    
+                    lbl_pen_0 = np.copy(lbl_pen)
                     
                     # [TODO TASK 4.3] alternating Gibbs sampling in the top RBM for
                     #  k='n_gibbs_wakesleep' steps, also store neccessary information for learning this RBM.
+                    
+                    # GIBBS AT TOP
                     lbl_neg = lbl_wake
                     lbl_pen_neg = 0
                     for _ in range(self.n_gibbs_wakesleep):
-                        lbl_pen_neg = self.rbm_stack['pen+lbl--top'].get_v_given_h(lbl_neg)[1]
-                        lbl_neg = self.rbm_stack['pen+lbl--top'].get_h_given_v(lbl_pen_neg)[1]
+                        p_pen_neg, lbl_pen_neg = self.rbm_stack['pen+lbl--top'].get_v_given_h(lbl_neg)
+                        p_neg, lbl_neg = self.rbm_stack['pen+lbl--top'].get_h_given_v(lbl_pen_neg)
                     
                     # [TODO TASK 4.3] sleep phase : from the activities in the top RBM, drive the network top to bottom.
                     lbl_pen_sleep = lbl_pen_neg[:, :-n_labels]
+                    p_pen_sleep = p_pen_neg[:, :-n_labels]
                     p_hid_sleep, lbl_hid_sleep = self.rbm_stack['hid--pen'].get_v_given_h_dir(lbl_pen_sleep) 
                     p_vis_sleep, lbl_vis_sleep = self.rbm_stack['vis--hid'].get_v_given_h_dir(lbl_hid_sleep)
+                    
+                    #p_hid_sleep, lbl_hid_sleep = self.rbm_stack['hid--pen'].get_v_given_h_dir(p_pen_sleep) 
+                    #p_vis_sleep, lbl_vis_sleep = self.rbm_stack['vis--hid'].get_v_given_h_dir(p_hid_sleep)
                     
                     # [TODO TASK 4.3] compute predictions : compute generative predictions
                     #  from wake-phase activations, and recognize predictions from sleep-phase activations.
                     # Note that these predictions will not alter the network activations, we use them
                     # only to learn the directed connections.
-                    
-                    pred_lbl_pen_sleep = self.rbm_stack['hid--pen'].get_h_given_v_dir(lbl_hid_sleep)[1]
-                    pred_lbl_hid_sleep = self.rbm_stack['vis--hid'].get_h_given_v_dir(p_vis_sleep)[1]
+                    #pred_lbl_pen_sleep = self.rbm_stack['hid--pen'].get_h_given_v_dir(lbl_hid_sleep)[1]
+                    pred_p_pen_sleep, pred_lbl_pen_sleep = self.rbm_stack['hid--pen'].get_h_given_v_dir(lbl_hid_sleep)
+                    pred_p_hid_sleep, pred_lbl_hid_sleep = self.rbm_stack['vis--hid'].get_h_given_v_dir(lbl_vis_sleep)
                     pred_p_vis, pred_lbl_vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(lbl_hid_wake)
                     pred_p_hid, pred_lbl_hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(lbl_pen_wake)
                     
+                    
                     # [TODO TASK 4.3] update generative parameters : here you will only use 'update_generate_params'
                     # method from rbm class.
-                    self.rbm_stack['vis--hid'].update_generate_params(lbl_hid_wake, visible_minibatch, pred_p_vis)
-                    self.rbm_stack['hid--pen'].update_generate_params(lbl_pen_wake, lbl_hid_wake, pred_p_hid)
+                    self.rbm_stack['vis--hid'].update_generate_params(lbl_hid_wake, vis_minibatch, pred_p_vis)
+                    #self.rbm_stack['hid--pen'].update_generate_params(lbl_pen_wake, lbl_hid_wake, pred_p_hid)
+                    self.rbm_stack['hid--pen'].update_generate_params(lbl_pen_wake, p_hid_wake, pred_p_hid)
                     
                     # [TODO TASK 4.3] update parameters of top rbm : here you will only use 'update_params'
                     #  method from rbm class.
-                    lbl_pen = np.concatenate((lbl_pen_wake, label_minibatch), axis=1)
-                    self.rbm_stack['pen+lbl--top'].update_params(lbl_pen, lbl_wake, lbl_pen_neg, lbl_neg)
+                    lbl_pen = np.concatenate((lbl_pen_wake, lbl_minibatch), axis=1)
+                    #self.rbm_stack['pen+lbl--top'].update_params(lbl_pen, lbl_wake, lbl_pen_neg, lbl_neg)
+                    self.rbm_stack['pen+lbl--top'].update_params(lbl_pen_0, lbl_wake, p_pen_neg, p_neg)
                     
                     # [TODO TASK 4.3] update generative parameters : here you will only use 'update_recognize_params'
                     #  method from rbm class.
                     self.rbm_stack['hid--pen'].update_recognize_params(lbl_hid_sleep, lbl_pen_sleep, pred_lbl_pen_sleep)
                     self.rbm_stack['vis--hid'].update_recognize_params(p_vis_sleep, lbl_hid_sleep, pred_lbl_hid_sleep)
-
+                    
+                    #self.rbm_stack['hid--pen'].update_recognize_params(lbl_hid_sleep, p_pen_sleep, pred_p_pen_sleep)
+                    #self.rbm_stack['vis--hid'].update_recognize_params(lbl_vis_sleep, p_hid_sleep, pred_p_hid_sleep)
+ 
                     if it % self.print_period == 0:
                         print("4.3 iteration=%7d" % it)
 
