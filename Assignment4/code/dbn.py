@@ -227,6 +227,7 @@ class DeepBeliefNet:
                     p_pen_wake, lbl_pen_wake = self.rbm_stack['hid--pen'].get_h_given_v_dir(lbl_hid_wake)
                     #p_pen_wake, lbl_pen_wake = self.rbm_stack['hid--pen'].get_h_given_v_dir(p_hid_wake)
                     lbl_pen = np.concatenate((lbl_pen_wake, lbl_minibatch), axis=1)
+                    prob_pen = np.concatenate((p_pen_wake, lbl_minibatch), axis=1)
                     p_wake, lbl_wake = self.rbm_stack['pen+lbl--top'].get_h_given_v(lbl_pen) 
                     
                     lbl_pen_0 = np.copy(lbl_pen)
@@ -239,7 +240,7 @@ class DeepBeliefNet:
                     lbl_pen_neg = 0
                     for _ in range(self.n_gibbs_wakesleep):
                         p_pen_neg, lbl_pen_neg = self.rbm_stack['pen+lbl--top'].get_v_given_h(lbl_neg)
-                        lbl_pen_neg[:, -lbl.shape[1]:] = lbl_minibatch[:, :]
+                        lbl_pen_neg[:, -lbl_minibatch.shape[1]:] = lbl_minibatch[:, :]
                         p_neg, lbl_neg = self.rbm_stack['pen+lbl--top'].get_h_given_v(lbl_pen_neg)
                         
                     p_pen_neg, lbl_pen_neg = self.rbm_stack['pen+lbl--top'].get_v_given_h(lbl_neg)    
@@ -278,8 +279,9 @@ class DeepBeliefNet:
                     
                     # [TODO TASK 4.3] update generative parameters : here you will only use 'update_recognize_params'
                     #  method from rbm class.
-                    self.rbm_stack['vis--hid'].update_recognize_params(lbl_hid_wake, vis_minibatch, p_vis_sleep)
-                    self.rbm_stack['hid--pen'].update_recognize_params(lbl_pen_wake, p_hid_wake, p_hid_sleep)
+                    self.rbm_stack['hid--pen'].update_recognize_params(lbl_hid_sleep, lbl_pen_sleep, prob_pen[:,:-10])
+                    self.rbm_stack['vis--hid'].update_recognize_params(lbl_vis_sleep, lbl_hid_sleep, p_hid_wake)
+                    
                     # self.rbm_stack['hid--pen'].update_recognize_params(lbl_hid_sleep, lbl_pen_sleep, pred_lbl_pen_sleep)
                     # self.rbm_stack['vis--hid'].update_recognize_params(p_vis_sleep, lbl_hid_sleep, pred_lbl_hid_sleep)
                     
