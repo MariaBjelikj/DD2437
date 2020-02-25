@@ -5,12 +5,16 @@ import os
 import glob
 import matplotlib.pyplot as plt
 
-#files = glob.glob('trained_rbm/*')
-#for f in files:
-#    os.remove(f)
+files = glob.glob('trained_rbm/*')
+for f in files:
+    os.remove(f)
+    
+files = glob.glob('trained_dbn/*')
+for f in files:
+    os.remove(f)
 
 np.random.seed(21)
-ITERATIONS = 1
+ITERATIONS = 2
 
 if __name__ == "__main__":
 
@@ -29,7 +33,7 @@ if __name__ == "__main__":
     #                                  image_size=image_size,
     #                                  is_top=False,
     #                                  n_labels=10,
-    #                                  batch_size=20
+    #                                  batch_size=10
     #                                  )
     #
     # averages = rbm.cd1(visible_trainset=train_imgs, n_iterations=ITERATIONS)
@@ -38,15 +42,15 @@ if __name__ == "__main__":
     # plt.xlabel("Epoch")
     # plt.ylabel("Average Loss rate")
     # plt.show()
-
+    
     ''' deep-belief net '''
 
     print("\nStarting a Deep Belief Net..")
 
-    dbn = DeepBeliefNet(sizes={"vis": image_size[0] * image_size[1], "hid": 200, "pen": 200, "top": 2000, "lbl": 10},
+    dbn = DeepBeliefNet(sizes={"vis": image_size[0] * image_size[1], "hid": 500, "pen": 500, "top": 2000, "lbl": 10},
                         image_size=image_size,
                         n_labels=10,
-                        batch_size=20
+                        batch_size=10
                         )
 
     ''' greedy layer-wise training '''
@@ -60,7 +64,7 @@ if __name__ == "__main__":
     for digit in range(10):
         digit_1hot = np.zeros(shape=(1, 10))
         digit_1hot[0, digit] = 1
-        dbn.generate(digit_1hot, name="rbms")
+        dbn.generate(digit_1hot, name="rbms") 
 
     ''' fine-tune wake-sleep training '''
 
