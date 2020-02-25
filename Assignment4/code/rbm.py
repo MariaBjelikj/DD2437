@@ -60,13 +60,14 @@ class RestrictedBoltzmannMachine:
 
         return
 
-    def cd1(self, visible_trainset, n_iterations=100):
+    def cd1(self, visible_trainset, n_iterations=100, plotting=True):
 
         """Contrastive Divergence with k=1 full alternating Gibbs sampling
 
         Args:
           visible_trainset: training data for this rbm, shape is (size of training set, size of visible layer)
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
+          plotting: set to True to plot (default = True)
         """
 
         # print("\nlearning CD1")
@@ -74,10 +75,9 @@ class RestrictedBoltzmannMachine:
         n_samples = visible_trainset.shape[0]
         loss_list = []
         results_list = []
+        error = []  # Storing error per iteration
         elements = int(n_samples / self.batch_size)
-        epoch_size = int(n_iterations / self.batch_size)
-        current_epoch = 10
-
+        current_epoch = 1  # Initialize current epoch as the first one
         for epoch in range(n_iterations):
             for it in tqdm(range(elements)):
 
@@ -87,13 +87,12 @@ class RestrictedBoltzmannMachine:
                 #  both probabilities and activations (samples from probablities) and you may have to decide when to use
                 #  what.
 
-
                 # Gibbs sampling in minibatches
-                #for batch_start in range(0, n_samples, self.batch_size):
-                #batch_end = min(batch_start + self.batch_size, n_samples)
+                # for batch_start in range(0, n_samples, self.batch_size):
+                # batch_end = min(batch_start + self.batch_size, n_samples)
 
                 # Positive phase
-                #v_0 = visible_trainset[batch_start:batch_end]
+                # v_0 = visible_trainset[batch_start:batch_end]
                 index_init = int(it % elements)
                 index_stop = int((index_init + 1) * self.batch_size)
                 index_init *= self.batch_size
@@ -107,40 +106,50 @@ class RestrictedBoltzmannMachine:
                 # [TODO TASK 4.1] update the parameters using function 'update_params'
 
                 # Update parameters
-                #self.update_params(v_0, p_h_given_v_0, p_v_given_h_1, p_h_given_v_1)
+                # self.update_params(v_0, p_h_given_v_0, p_v_given_h_1, p_h_given_v_1)
                 self.update_params(v_0, h_0, v_1, h_1)
 
                 # visualize once in a while when visible layer is input images
-                if it % self.rf["period"] == 0 and self.is_bottom:
-                    viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
-                           it=it, grid=self.rf["grid"])
+                # if it % self.rf["period"] == 0 and self.is_bottom:
+                #     viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
+                #            it=it, grid=self.rf["grid"])
 
-            # print progress
-            # DONE: LOSS FUNCTION IMPLEMENTED
-            #for img in visible_trainset:
-            ## Maybe we should use probs when reconstruction. Now it is using binary.
-            # temp.append(self.get_v_given_h(self.get_h_given_v(img)[1])[0])
+                if plotting:
+                    # print progress
+                    # DONE: LOSS FUNCTION IMPLEMENTED
+                    # for img in visible_trainset:
+                    #     # Maybe we should use probs when reconstruction. Now it is using binary.
+                    #     temp.append(self.get_v_given_h(self.get_h_given_v(img)[1])[0])
+                    if it % self.batch_size == 0:
+                        hidden_restored = self.get_h_given_v(v_0)[1]
+                        restored_image = self.get_v_given_h(hidden_restored)[1]
+                        error.append(np.linalg.norm(v_0 - restored_image))
 
-            # if int((epoch_size * current_epoch) - epoch_size) <= it < int((epoch_size * current_epoch)):
-            #     # Restoring image
-            #     hidden_restored = self.get_h_given_v(v_0)[1]
-            #     restored_image = self.get_v_given_h(hidden_restored)[1]
-            #     loss_function = np.linalg.norm(v_0 - restored_image) / self.batch_size
-            #     loss_list.append(loss_function)  # Store last 10 percent
-            #
-            # elif it >= epoch_size * current_epoch:
-            #     # Last iteration before emptying the list the list
-            #     hidden_restored = self.get_h_given_v(v_0)[1]
-            #     restored_image = self.get_v_given_h(hidden_restored)[1]
-            #     loss_function = np.linalg.norm(v_0 - restored_image) / self.batch_size
-            #     loss_list.append(loss_function)  # Store last 10 percent
-            #     results_list.append(np.array(loss_list).sum() / len(loss_list))  # Append avg loss epoch
-            #     loss_list = []  # Empty list
-            #     current_epoch += 1
+                    if current_epoch >= 10:
+                        # Restoring image
+                        hidden_restored = self.get_h_given_v(v_0)[1]
+                        restored_image = self.get_v_given_h(hidden_restored)[1]
+                        loss_function = np.linalg.norm(v_0 - restored_image) / self.batch_size
+                        loss_list.append(loss_function)  # Store last 10 percent
+                        if it == elements - 1:
+                            # Last iteration before emptying the list
+                            results_list.append(np.array(loss_list).sum() / len(loss_list))  # Append avg loss epoch
+                            loss_list = []  # Empty list
 
-            # if it % self.print_period == 0:
-            #     loss_function = np.linalg.norm(v_0 - v_1) / self.batch_size
-            #     print("\niteration=%7d recon_loss=%4.4f" % (it, loss_function))
+                    # if it % self.print_period == 0:
+                    #     loss_function = np.linalg.norm(v_0 - v_1) / self.batch_size
+                    #     print("\niteration=%7d recon_loss=%4.4f" % (it, loss_function))
+
+            # if self.is_bottom:
+            #     viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
+            #            epoch=epoch * epoch_size, grid=self.rf["grid"])
+            current_epoch += 1  # Update current epoch
+
+        if plotting:
+            plt.plot(range(len(error)), error)
+            plt.xlabel("Batch")
+            plt.ylabel("Error")
+            plt.show()
 
         return results_list
 
@@ -163,9 +172,9 @@ class RestrictedBoltzmannMachine:
         #  update the weight and bias parameters
         # equation 9
 
-        self.delta_bias_v = self.learning_rate * (np.sum(v_0 - v_k, axis=0)) # /v_0.shape[0]
+        self.delta_bias_v = self.learning_rate * (np.sum(v_0 - v_k, axis=0))  # /v_0.shape[0]
         self.delta_weight_vh = self.learning_rate * ((v_0.T @ h_0) - (v_k.T @ h_k))
-        self.delta_bias_h = self.learning_rate * (np.sum(h_0 - h_k, axis=0))  #/h_0.shape[0]
+        self.delta_bias_h = self.learning_rate * (np.sum(h_0 - h_k, axis=0))  # /h_0.shape[0]
 
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
@@ -352,8 +361,8 @@ class RestrictedBoltzmannMachine:
         #  and update the weight and bias parameters.
 
         self.delta_weight_h_to_v = self.learning_rate * inps.T @ (trgs - preds)
-        self.delta_bias_v = self.learning_rate * (np.sum(trgs - preds, axis=0)) 
-        
+        self.delta_bias_v = self.learning_rate * (np.sum(trgs - preds, axis=0))
+
         self.weight_h_to_v += self.delta_weight_h_to_v
         self.bias_v += self.delta_bias_v
 

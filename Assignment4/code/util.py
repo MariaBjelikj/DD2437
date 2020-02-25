@@ -104,7 +104,7 @@ def read_mnist(dim=None, n_train=60000, n_test=1000):
     return train_imgs[:n_train], train_lbls_1hot[:n_train], test_imgs[:n_test], test_lbls_1hot[:n_test]
 
 
-def viz_rf(weights, it, grid):
+def viz_rf(weights, epoch, grid):
     """
     Visualize receptive fields and save 
     """
@@ -116,7 +116,7 @@ def viz_rf(weights, it, grid):
             axs[x, y].set_xticks([])
             axs[x, y].set_yticks([])
             axs[x, y].imshow(weights[:, :, y + grid[1] * x], cmap="bwr", vmin=-imax, vmax=imax, interpolation=None)
-    plt.savefig("rf.iter%06d.png" % it)
+    plt.savefig("rf.epoch%d.png" % epoch)
     plt.close('all')
 
 

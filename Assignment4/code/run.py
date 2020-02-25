@@ -19,39 +19,43 @@ if __name__ == "__main__":
 
     ''' restricted boltzmann machine '''
 
-    # print("\nStarting a Restricted Boltzmann Machine..")
+    print("\nStarting a Restricted Boltzmann Machine..")
+
+    # Iterating over the epochs
+    averages = []
+    for hidden in [200, 500]:
+        print("\nNumber of hidden units: " + str(hidden))
+        rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0] * image_size[1],
+                                         ndim_hidden=hidden,
+                                         is_bottom=True,
+                                         image_size=image_size,
+                                         is_top=False,
+                                         n_labels=10,
+                                         batch_size=20
+                                         )
+
+        averages.append(rbm.cd1(visible_trainset=train_imgs, n_iterations=ITERATIONS))
+    for i, hidden in enumerate([200, 500]):
+        plt.plot(range(10, 21), averages[i], label=str(hidden) + " hidden units")
+    plt.xticks(range(10, 21))
+    plt.xlabel("Epoch")
+    plt.ylabel("Average Loss rate")
+    plt.legend()
+    plt.show()
+
+    # ''' deep-belief net '''
     #
-    # # Iterating over the epochs
+    # print("\nStarting a Deep Belief Net..")
     #
-    # rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0] * image_size[1],
-    #                                  ndim_hidden=200,
-    #                                  is_bottom=True,
-    #                                  image_size=image_size,
-    #                                  is_top=False,
-    #                                  n_labels=10,
-    #                                  batch_size=20
-    #                                  )
+    # dbn = DeepBeliefNet(sizes={"vis": image_size[0] * image_size[1], "hid": 200, "pen": 200, "top": 2000, "lbl": 10},
+    #                     image_size=image_size,
+    #                     n_labels=10,
+    #                     batch_size=20
+    #                     )
     #
-    # averages = rbm.cd1(visible_trainset=train_imgs, n_iterations=ITERATIONS)
-    # plt.plot(range(10, 21), averages)
-    # plt.xticks(range(10, 21))
-    # plt.xlabel("Epoch")
-    # plt.ylabel("Average Loss rate")
-    # plt.show()
-
-    ''' deep-belief net '''
-
-    print("\nStarting a Deep Belief Net..")
-
-    dbn = DeepBeliefNet(sizes={"vis": image_size[0] * image_size[1], "hid": 200, "pen": 200, "top": 2000, "lbl": 10},
-                        image_size=image_size,
-                        n_labels=10,
-                        batch_size=20
-                        )
-
-    ''' greedy layer-wise training '''
-
-    dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=ITERATIONS)
+    # ''' greedy layer-wise training '''
+    #
+    # dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=ITERATIONS)
 
     # dbn.recognize(train_imgs, train_lbls)
     #
