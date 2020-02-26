@@ -46,7 +46,7 @@ class DeepBeliefNet:
         self.n_gibbs_recog = 15
         self.n_gibbs_gener = 600
         self.n_gibbs_wakesleep = 5
-        self.print_period = 3000
+        self.print_period = 2000
 
         return
 
@@ -227,7 +227,6 @@ class DeepBeliefNet:
                     p_pen_wake, lbl_pen_wake = self.rbm_stack['hid--pen'].get_h_given_v_dir(lbl_hid_wake)
                     #p_pen_wake, lbl_pen_wake = self.rbm_stack['hid--pen'].get_h_given_v_dir(p_hid_wake)
                     lbl_pen = np.concatenate((lbl_pen_wake, lbl_minibatch), axis=1)
-                    prob_pen = np.concatenate((p_pen_wake, lbl_minibatch), axis=1)
                     p_wake, lbl_wake = self.rbm_stack['pen+lbl--top'].get_h_given_v(lbl_pen) 
                     
                     lbl_pen_0 = np.copy(lbl_pen)
@@ -240,10 +239,7 @@ class DeepBeliefNet:
                     lbl_pen_neg = 0
                     for _ in range(self.n_gibbs_wakesleep):
                         p_pen_neg, lbl_pen_neg = self.rbm_stack['pen+lbl--top'].get_v_given_h(lbl_neg)
-                        lbl_pen_neg[:, -lbl_minibatch.shape[1]:] = lbl_minibatch[:, :]
                         p_neg, lbl_neg = self.rbm_stack['pen+lbl--top'].get_h_given_v(lbl_pen_neg)
-                        
-                    p_pen_neg, lbl_pen_neg = self.rbm_stack['pen+lbl--top'].get_v_given_h(lbl_neg)    
                     
                     # [TODO TASK 4.3] sleep phase : from the activities in the top RBM, drive the network top to bottom.
                     lbl_pen_sleep = lbl_pen_neg[:, :-n_labels]
@@ -258,18 +254,18 @@ class DeepBeliefNet:
                     #  from wake-phase activations, and recognize predictions from sleep-phase activations.
                     # Note that these predictions will not alter the network activations, we use them
                     # only to learn the directed connections.
-                    # #pred_lbl_pen_sleep = self.rbm_stack['hid--pen'].get_h_given_v_dir(lbl_hid_sleep)[1]
-                    # pred_p_pen_sleep, pred_lbl_pen_sleep = self.rbm_stack['hid--pen'].get_h_given_v_dir(lbl_hid_sleep)
-                    # pred_p_hid_sleep, pred_lbl_hid_sleep = self.rbm_stack['vis--hid'].get_h_given_v_dir(lbl_vis_sleep)
-                    # pred_p_vis, pred_lbl_vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(lbl_hid_wake)
-                    # pred_p_hid, pred_lbl_hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(lbl_pen_wake)
+                    #pred_lbl_pen_sleep = self.rbm_stack['hid--pen'].get_h_given_v_dir(lbl_hid_sleep)[1]
+                    pred_p_pen_sleep, pred_lbl_pen_sleep = self.rbm_stack['hid--pen'].get_h_given_v_dir(lbl_hid_sleep)
+                    pred_p_hid_sleep, pred_lbl_hid_sleep = self.rbm_stack['vis--hid'].get_h_given_v_dir(lbl_vis_sleep)
+                    pred_p_vis, pred_lbl_vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(lbl_hid_wake)
+                    pred_p_hid, pred_lbl_hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(lbl_pen_wake)
                     
                     
                     # [TODO TASK 4.3] update generative parameters : here you will only use 'update_generate_params'
                     # method from rbm class.
-                    self.rbm_stack['vis--hid'].update_generate_params(lbl_hid_wake, vis_minibatch, p_vis_sleep)
+                    self.rbm_stack['vis--hid'].update_generate_params(lbl_hid_wake, vis_minibatch, pred_p_vis)
                     #self.rbm_stack['hid--pen'].update_generate_params(lbl_pen_wake, lbl_hid_wake, pred_p_hid)
-                    self.rbm_stack['hid--pen'].update_generate_params(lbl_pen_wake, p_hid_wake, p_hid_sleep)
+                    self.rbm_stack['hid--pen'].update_generate_params(lbl_pen_wake, p_hid_wake, pred_p_hid)
                     
                     # [TODO TASK 4.3] update parameters of top rbm : here you will only use 'update_params'
                     #  method from rbm class.
@@ -279,17 +275,14 @@ class DeepBeliefNet:
                     
                     # [TODO TASK 4.3] update generative parameters : here you will only use 'update_recognize_params'
                     #  method from rbm class.
-                    self.rbm_stack['hid--pen'].update_recognize_params(lbl_hid_sleep, lbl_pen_sleep, prob_pen[:,:-10])
-                    self.rbm_stack['vis--hid'].update_recognize_params(lbl_vis_sleep, lbl_hid_sleep, p_hid_wake)
-                    
-                    # self.rbm_stack['hid--pen'].update_recognize_params(lbl_hid_sleep, lbl_pen_sleep, pred_lbl_pen_sleep)
-                    # self.rbm_stack['vis--hid'].update_recognize_params(p_vis_sleep, lbl_hid_sleep, pred_lbl_hid_sleep)
+                    self.rbm_stack['hid--pen'].update_recognize_params(lbl_hid_sleep, lbl_pen_sleep, pred_lbl_pen_sleep)
+                    self.rbm_stack['vis--hid'].update_recognize_params(p_vis_sleep, lbl_hid_sleep, pred_lbl_hid_sleep)
                     
                     #self.rbm_stack['hid--pen'].update_recognize_params(lbl_hid_sleep, p_pen_sleep, pred_p_pen_sleep)
                     #self.rbm_stack['vis--hid'].update_recognize_params(lbl_vis_sleep, p_hid_sleep, pred_p_hid_sleep)
  
-                    if it % self.print_period == 0:
-                        print("4.3 iteration=%7d" % it)
+                    # if it % self.print_period == 0:
+                    #     print("4.3 iteration=%7d" % it)
 
 
 

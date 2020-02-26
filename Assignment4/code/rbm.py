@@ -70,8 +70,6 @@ class RestrictedBoltzmannMachine:
           plotting: set to True to plot (default = True)
         """
 
-        # print("\nlearning CD1")
-
         n_samples = visible_trainset.shape[0]
         loss_list = []
         results_list = []
@@ -81,18 +79,11 @@ class RestrictedBoltzmannMachine:
         for epoch in range(n_iterations):
             for it in tqdm(range(elements)):
 
-                # DONE
                 # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1. you may need to
                 #  use the inference functions 'get_h_given_v' and 'get_v_given_h'. note that inference methods returns
                 #  both probabilities and activations (samples from probablities) and you may have to decide when to use
                 #  what.
 
-                # Gibbs sampling in minibatches
-                # for batch_start in range(0, n_samples, self.batch_size):
-                # batch_end = min(batch_start + self.batch_size, n_samples)
-
-                # Positive phase
-                # v_0 = visible_trainset[batch_start:batch_end]
                 index_init = int(it % elements)
                 index_stop = int((index_init + 1) * self.batch_size)
                 index_init *= self.batch_size
@@ -102,24 +93,11 @@ class RestrictedBoltzmannMachine:
                 p_v_given_h_1, v_1 = self.get_v_given_h(h_0)
                 p_h_given_v_0, h_1 = self.get_h_given_v(v_1)
 
-                # DONE
                 # [TODO TASK 4.1] update the parameters using function 'update_params'
 
-                # Update parameters
-                # self.update_params(v_0, p_h_given_v_0, p_v_given_h_1, p_h_given_v_1)
                 self.update_params(v_0, h_0, v_1, h_1)
 
-                # visualize once in a while when visible layer is input images
-                # if it % self.rf["period"] == 0 and self.is_bottom:
-                #     viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
-                #            it=it, grid=self.rf["grid"])
-
                 if plotting:
-                    # print progress
-                    # DONE: LOSS FUNCTION IMPLEMENTED
-                    # for img in visible_trainset:
-                    #     # Maybe we should use probs when reconstruction. Now it is using binary.
-                    #     temp.append(self.get_v_given_h(self.get_h_given_v(img)[1])[0])
                     if it % self.batch_size == 0:
                         hidden_restored = self.get_h_given_v(v_0)[1]
                         restored_image = self.get_v_given_h(hidden_restored)[1]
@@ -141,8 +119,10 @@ class RestrictedBoltzmannMachine:
                     #     print("\niteration=%7d recon_loss=%4.4f" % (it, loss_function))
 
             # if self.is_bottom:
-            #     viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
+            #     viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0],
+            #     self.image_size[1], -1)),
             #            epoch=epoch * epoch_size, grid=self.rf["grid"])
+
             current_epoch += 1  # Update current epoch
 
         if plotting:
@@ -172,9 +152,9 @@ class RestrictedBoltzmannMachine:
         #  update the weight and bias parameters
         # equation 9
 
-        self.delta_bias_v = self.learning_rate * (np.sum(v_0 - v_k, axis=0))  # /v_0.shape[0]
+        self.delta_bias_v = self.learning_rate * (np.sum(v_0 - v_k, axis=0)) # /v_0.shape[0]
         self.delta_weight_vh = self.learning_rate * ((v_0.T @ h_0) - (v_k.T @ h_k))
-        self.delta_bias_h = self.learning_rate * (np.sum(h_0 - h_k, axis=0))  # /h_0.shape[0]
+        self.delta_bias_h = self.learning_rate * (np.sum(h_0 - h_k, axis=0))  #/h_0.shape[0]
 
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
@@ -359,10 +339,10 @@ class RestrictedBoltzmannMachine:
         # DONE
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below)
         #  and update the weight and bias parameters.
- 
-        self.delta_weight_h_to_v = self.learning_rate * inps.T @ (trgs - preds)
-        self.delta_bias_v = self.learning_rate * (np.sum(trgs - preds, axis=0))
 
+        self.delta_weight_h_to_v = self.learning_rate * inps.T @ (trgs - preds)
+        self.delta_bias_v = self.learning_rate * (np.sum(trgs - preds, axis=0)) 
+        
         self.weight_h_to_v += self.delta_weight_h_to_v
         self.bias_v += self.delta_bias_v
 

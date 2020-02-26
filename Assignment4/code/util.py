@@ -106,7 +106,7 @@ def read_mnist(dim=None, n_train=60000, n_test=1000):
 
 def viz_rf(weights, epoch, grid):
     """
-    Visualize receptive fields and save 
+    Visualize receptive fields and save
     """
     fig, axs = plt.subplots(grid[0], grid[1], figsize=(grid[1], grid[0]))  # ,constrained_layout=True)
     plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
